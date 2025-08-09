@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Podcast Analysis v2{% endblock %}
+
+{% block content %}
+<div x-data="dashboard()" x-init="loadDashboardData()">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-tachometer-alt mr-3 text-indigo-600"></i>
+            Your Learning Dashboard
+        </h1>
+        <p class="mt-2 text-gray-600">Welcome back! Here's what's new in your podcast learning journey.</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Reports -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-file-alt text-2xl text-indigo-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total Analyses
+                            </dt>
+                            <dd class="text-2xl font-bold text-gray-900" x-text="stats.totalReports || '0'">
+                                Loading...
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reading Time -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-2xl text-green-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Reading Time (Week)
+                            </dt>
+                            <dd class="text-2xl font-bold text-gray-900" x-text="stats.weeklyReadingTime || '0'">
+                                Loading...
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Entries -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-brain text-2xl text-purple-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Knowledge Entries
+                            </dt>
+                            <dd class="text-2xl font-bold text-gray-900" x-text="stats.knowledgeEntries || '0'">
+                                Loading...
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Subscriptions -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-rss text-2xl text-orange-600"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Subscriptions
+                            </dt>
+                            <dd class="text-2xl font-bold text-gray-900" x-text="stats.activeSubscriptions || '0'">
+                                Loading...
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Insights -->
+    <div class="mb-8">
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                    Today's Insights
+                </h2>
+                
+                <div x-show="todaysInsights.length === 0 && !loading" class="text-center py-8">
+                    <i class="fas fa-coffee text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-500">No new insights today. Check back later!</p>
+                    <a href="/podcasts" class="mt-2 inline-flex items-center text-indigo-600 hover:text-indigo-500">
+                        <i class="fas fa-plus mr-1"></i>
+                        Subscribe to more podcasts
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    <template x-for="insight in todaysInsights" :key="insight.id">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-medium text-gray-900" x-text="insight.episode_title">
+                                    </h3>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        <span x-text="insight.podcast_name"></span> • 
+                                        <span x-text="PodcastApp.formatDate(insight.created_at)"></span> • 
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium ml-1">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span x-text="PodcastApp.formatReadingTime(insight.reading_time_minutes)"></span>
+                                        </span>
+                                    </p>
+                                    
+                                    <div x-show="insight.key_quote" class="mt-3">
+                                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                                            <div class="flex">
+                                                <div class="flex-shrink-0">
+                                                    <i class="fas fa-quote-left text-yellow-400"></i>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <p class="text-sm text-yellow-700 italic" x-text="insight.key_quote">
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="ml-4">
+                                    <a :href="`/analysis/${insight.id}`" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Knowledge Base Entries -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-database mr-2 text-purple-600"></i>
+                        Recent Knowledge
+                    </h2>
+                    <a href="/knowledge-base" class="text-sm text-indigo-600 hover:text-indigo-500">
+                        View all
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                
+                <div x-show="recentKnowledge.length === 0 && !loading" class="text-center py-6">
+                    <i class="fas fa-book-open text-3xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 text-sm">Your knowledge base is empty</p>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="entry in recentKnowledge" :key="entry.id">
+                        <div class="border-l-4 border-purple-400 pl-4 py-2">
+                            <h4 class="text-sm font-medium text-gray-900" x-text="entry.entry_title">
+                            </h4>
+                            <p class="text-sm text-gray-500 mt-1">
+                                <span x-text="entry.podcast_category || 'Uncategorized'"></span> • 
+                                <span x-text="PodcastApp.formatDate(entry.created_at)"></span>
+                                <span x-show="entry.is_favorited" class="ml-2">
+                                    <i class="fas fa-star text-yellow-400"></i>
+                                </span>
+                            </p>
+                            <p x-show="entry.key_insights" class="text-sm text-gray-600 mt-2 line-clamp-2" 
+                               x-text="entry.key_insights.substring(0, 100) + (entry.key_insights.length > 100 ? '...' : '')">
+                            </p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Analysis Reports -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-medium text-gray-900">
+                        <i class="fas fa-chart-line mr-2 text-indigo-600"></i>
+                        Recent Analyses
+                    </h2>
+                    <a href="/reports" class="text-sm text-indigo-600 hover:text-indigo-500">
+                        View all
+                        <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                
+                <div x-show="recentReports.length === 0 && !loading" class="text-center py-6">
+                    <i class="fas fa-file-alt text-3xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 text-sm">No analyses yet</p>
+                </div>
+
+                <div class="space-y-3">
+                    <template x-for="report in recentReports" :key="report.id">
+                        <div class="border border-gray-200 rounded-md p-3 hover:bg-gray-50">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="text-sm font-medium text-gray-900 truncate" x-text="report.episode_title">
+                                    </h4>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        <span x-text="report.podcast_name"></span> • 
+                                        <span x-text="PodcastApp.formatDate(report.created_at)"></span>
+                                    </p>
+                                    <div class="mt-2 flex items-center space-x-2">
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span x-text="PodcastApp.formatReadingTime(report.reading_time_minutes)"></span>
+                                        </span>
+                                        <span x-show="report.key_quote" class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                                            <i class="fas fa-quote-left mr-1"></i>
+                                            Key Quote
+                                        </span>
+                                    </div>
+                                </div>
+                                <a :href="`/analysis/${report.id}`" class="ml-3 text-indigo-600 hover:text-indigo-500">
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">
+                <i class="fas fa-rocket mr-2 text-indigo-600"></i>
+                Quick Actions
+            </h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="/podcasts" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-plus mr-2 text-green-600"></i>
+                    Add Podcast
+                </a>
+                
+                <a href="/knowledge-base" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-search mr-2 text-blue-600"></i>
+                    Search Knowledge
+                </a>
+                
+                <a href="/subscriptions" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-cog mr-2 text-purple-600"></i>
+                    Manage Prompts
+                </a>
+                
+                <button @click="triggerEmailDigest()" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-envelope mr-2 text-orange-600"></i>
+                    Send Digest
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function dashboard() {
+    return {
+        loading: true,
+        stats: {},
+        todaysInsights: [],
+        recentKnowledge: [],
+        recentReports: [],
+        
+        async loadDashboardData() {
+            this.loading = true;
+            
+            try {
+                // In a real app, these would be separate API calls
+                // For now, we'll simulate the data structure
+                await this.loadStats();
+                await this.loadTodaysInsights();
+                await this.loadRecentKnowledge();
+                await this.loadRecentReports();
+                
+            } catch (error) {
+                PodcastApp.showNotification('Failed to load dashboard data', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async loadStats() {
+            // Simulate stats data
+            this.stats = {
+                totalReports: 47,
+                weeklyReadingTime: '2h 15m',
+                knowledgeEntries: 34,
+                activeSubscriptions: 8
+            };
+        },
+        
+        async loadTodaysInsights() {
+            // Simulate today's insights
+            this.todaysInsights = [
+                {
+                    id: 1,
+                    episode_title: "The Future of AI in Business Strategy",
+                    podcast_name: "Tech Leadership Podcast",
+                    created_at: new Date().toISOString(),
+                    reading_time_minutes: 7,
+                    key_quote: "The companies that will dominate the next decade are those that view AI not as a tool, but as a fundamental business capability."
+                }
+            ];
+        },
+        
+        async loadRecentKnowledge() {
+            // Simulate recent knowledge entries
+            this.recentKnowledge = [
+                {
+                    id: 1,
+                    entry_title: "Remote Work Productivity Strategies",
+                    podcast_category: "Business",
+                    created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+                    is_favorited: true,
+                    key_insights: "Three key strategies for maintaining productivity in remote teams: async-first communication, clear outcome definitions, and regular check-ins."
+                },
+                {
+                    id: 2,
+                    entry_title: "Investment Strategies for Infrastructure",
+                    podcast_category: "Finance",
+                    created_at: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                    is_favorited: false,
+                    key_insights: "Infrastructure investments are becoming increasingly attractive due to long-term stability and inflation protection."
+                }
+            ];
+        },
+        
+        async loadRecentReports() {
+            // Simulate recent reports
+            this.recentReports = [
+                {
+                    id: 1,
+                    episode_title: "Building Resilient Teams in Uncertain Times",
+                    podcast_name: "Leadership Weekly",
+                    created_at: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+                    reading_time_minutes: 5,
+                    key_quote: "Resilience isn't about avoiding failure, it's about learning faster than your competition."
+                },
+                {
+                    id: 2,
+                    episode_title: "The Psychology of Decision Making",
+                    podcast_name: "Behavioral Economics Show",
+                    created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+                    reading_time_minutes: 8,
+                    key_quote: null
+                }
+            ];
+        },
+        
+        async triggerEmailDigest() {
+            try {
+                // In a real app, this would trigger the email digest
+                PodcastApp.showNotification('Weekly digest email sent!', 'success');
+            } catch (error) {
+                PodcastApp.showNotification('Failed to send digest email', 'error');
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

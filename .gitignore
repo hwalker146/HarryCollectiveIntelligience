@@ -1,0 +1,63 @@
+# Audio files (too large for GitHub)
+data/audio/
+*.mp3
+*.wav
+*.m4a
+
+# Database files (contains personal data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+rss_intelligence/logs/
+
+# Environment variables and secrets
+.env
+
+# Credentials (will be set via GitHub Secrets)
+credentials.json
+token.json
+rss_intelligence/credentials.json
+rss_intelligence/token.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large master files (will be recreated)
+COMPLETE_MASTER_*.md
+
+# RSS Intelligence processed data
+rss_intelligence/processed_articles.json
+rss_intelligence/reports/

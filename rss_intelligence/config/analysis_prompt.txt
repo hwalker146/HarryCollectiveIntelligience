@@ -1,0 +1,4 @@
+Provide a brief, factual summary of this article in 2-3 sentences. Focus on the key facts, numbers, and developments mentioned. What happened, who was involved, and what are the main implications?
+
+Article to analyze:
+{article_content}

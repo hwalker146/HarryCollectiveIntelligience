@@ -1,0 +1,13 @@
+# Core dependencies for Podcast Analysis Backend System
+feedparser==6.0.10
+requests==2.31.0
+python-dotenv==1.0.0
+schedule==1.2.0
+openai==1.35.0
+anthropic==0.28.0
+
+# Optional: For production audio transcription
+# whisper-openai==1.0.0  # Uncomment when implementing actual transcription
+
+# Optional: For enhanced email formatting
+# markdown==3.4.4  # Uncomment if adding markdown email support

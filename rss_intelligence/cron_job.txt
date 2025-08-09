@@ -1,0 +1,16 @@
+# RSS Intelligence System - Daily Analysis
+# Runs every day at 6:00 AM
+0 6 * * * cd '/Users/hwalker/Desktop/podcast_processor/podcast_app_v2/rss_intelligence' && python3 main.py >> logs/rss_intelligence.log 2>&1
+
+# Alternative times:
+# 0 8 * * * cd '/Users/hwalker/Desktop/podcast_processor/podcast_app_v2/rss_intelligence' && python3 main.py >> logs/rss_intelligence.log 2>&1  # 8 AM
+# 0 10 * * * cd '/Users/hwalker/Desktop/podcast_processor/podcast_app_v2/rss_intelligence' && python3 main.py >> logs/rss_intelligence.log 2>&1  # 10 AM
+
+# To install this cron job, run:
+# crontab cron_job.txt
+
+# To view current cron jobs:
+# crontab -l
+
+# To remove all cron jobs:
+# crontab -r

@@ -1,0 +1,30 @@
+# RSS Intelligence System Requirements
+
+# Core dependencies
+aiohttp>=3.8.0
+asyncio-compat>=0.1.0
+feedparser>=6.0.0
+python-dotenv>=0.19.0
+
+# Web scraping and content extraction
+beautifulsoup4>=4.11.0
+readability-lxml>=0.8.0
+lxml>=4.9.0
+html5lib>=1.1
+
+# AI APIs
+anthropic>=0.20.0
+openai>=1.0.0
+
+# Google APIs (optional)
+google-api-python-client>=2.0.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=0.5.0
+
+# Utilities
+requests>=2.28.0
+python-dateutil>=2.8.0
+pytz>=2022.1
+
+# Optional: For better async support
+uvloop>=0.17.0; sys_platform != "win32"

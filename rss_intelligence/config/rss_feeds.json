@@ -1,0 +1,17 @@
+{
+  "BBC Business": "http://feeds.bbci.co.uk/news/business/rss.xml",
+  "BBC Technology": "http://feeds.bbci.co.uk/news/technology/rss.xml",
+  "Infrastructure USA": "https://infrastructureusa.org/feed",
+  "Renew Canada": "https://renewcanada.net/feed",
+  "Infrastructurist": "https://infrastructurist.com/feed",
+  "Data Center News Asia": "https://datacenternews.asia/feed",
+  "Data Center Post": "https://datacenterpost.com/feed",
+  "Government Executive": "https://www.govexec.com/rss/channel/excellence/",
+  "Federal News Network": "https://federalnewsnetwork.com/feed/",
+  "SmartCitiesDive": "https://www.smartcitiesdive.com/feeds/news/",
+  "Engineering News Record": "https://www.enr.com/rss/all",
+  "Construction Dive": "https://www.constructiondive.com/feeds/news/",
+  "Utility Dive": "https://www.utilitydive.com/feeds/news/",
+  "Reuters Technology": "https://www.reuters.com/technology/",
+  "TechCrunch": "https://techcrunch.com/feed/"
+}

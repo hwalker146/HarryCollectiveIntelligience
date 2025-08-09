@@ -1,0 +1,11 @@
+{
+  "BBC News Business": "http://feeds.bbci.co.uk/news/business/rss.xml",
+  "Reuters Business": "https://www.reuters.com/business/feed/",
+  "AP News Business": "https://feeds.apnews.com/business",
+  "CNN Business": "http://rss.cnn.com/rss/money_latest.rss", 
+  "Infrastructure USA": "https://infrastructureusa.org/feed",
+  "Renew Canada": "https://renewcanada.net/feed",
+  "Infrastructurist": "https://infrastructurist.com/feed",
+  "Data Center News Asia": "https://datacenternews.asia/feed",
+  "Data Center Post": "https://datacenterpost.com/feed"
+}

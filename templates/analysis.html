@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Report - Podcast Analysis v2{% endblock %}
+
+{% block content %}
+<div x-data="analysisPage()" x-init="loadAnalysis()">
+    <!-- Header -->
+    <div class="mb-8">
+        <nav class="flex" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-4">
+                <li>
+                    <div>
+                        <a href="/dashboard" class="text-gray-400 hover:text-gray-500">
+                            <i class="fas fa-home"></i>
+                            <span class="sr-only">Home</span>
+                        </a>
+                    </div>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-gray-400 mr-4"></i>
+                        <a href="/reports" class="text-sm font-medium text-gray-500 hover:text-gray-700">Analysis Reports</a>
+                    </div>
+                </li>
+                <li>
+                    <div class="flex items-center">
+                        <i class="fas fa-chevron-right text-gray-400 mr-4"></i>
+                        <span class="text-sm font-medium text-gray-500">Current Report</span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+        
+        <div x-show="!loading && analysis" class="mt-4">
+            <h1 class="text-3xl font-bold text-gray-900" x-text="analysis?.episode_title">
+                Loading...
+            </h1>
+            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
+                <span class="flex items-center">
+                    <i class="fas fa-podcast mr-1"></i>
+                    <span x-text="analysis?.podcast_name"></span>
+                </span>
+                <span class="flex items-center">
+                    <i class="fas fa-calendar mr-1"></i>
+                    <span x-text="analysis?.created_at ? PodcastApp.formatDate(analysis.created_at) : ''"></span>
+                </span>
+                <span class="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <i class="fas fa-clock mr-1"></i>
+                    <span x-text="analysis?.reading_time_minutes ? PodcastApp.formatReadingTime(analysis.reading_time_minutes) : ''"></span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div x-show="loading" class="text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-500">Loading analysis...</p>
+    </div>
+
+    <!-- Analysis Content -->
+    <div x-show="!loading && analysis" class="space-y-8">
+        <!-- Key Quote (if available) -->
+        <div x-show="analysis?.key_quote" class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-quote-left text-2xl text-yellow-400"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-yellow-900 mb-2">Key Quote</h3>
+                    <p class="text-yellow-700 italic text-lg leading-relaxed" x-text="analysis?.key_quote"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center space-x-4">
+                <button @click="toggleKnowledgeBase()" 
+                        :class="analysis?.in_knowledge_base ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i :class="analysis?.in_knowledge_base ? 'fas fa-check' : 'fas fa-plus'" class="mr-2"></i>
+                    <span x-text="analysis?.in_knowledge_base ? 'In Knowledge Base' : 'Add to Knowledge Base'"></span>
+                </button>
+                
+                <button @click="toggleFavorite()" 
+                        :class="analysis?.is_favorited ? 'text-yellow-600' : 'text-gray-400 hover:text-yellow-600'"
+                        class="p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                    <i class="fas fa-star text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button @click="shareAnalysis()" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-share mr-2"></i>
+                    Share
+                </button>
+                
+                <button @click="exportAnalysis()" class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-download mr-2"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Analysis Content -->
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-brain mr-2 text-indigo-600"></i>
+                    AI Analysis
+                </h2>
+            </div>
+            <div class="px-6 py-6">
+                <div class="prose max-w-none" x-html="analysis?.analysis_result ? analysis.analysis_result.replace(/\n/g, '<br>') : ''">
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Entry (if added) -->
+        <div x-show="analysis?.in_knowledge_base && knowledgeEntry" class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-database mr-2 text-purple-600"></i>
+                    Knowledge Base Entry
+                </h2>
+            </div>
+            <div class="px-6 py-6 space-y-4">
+                <div>
+                    <label for="entry-title" class="block text-sm font-medium text-gray-700">Entry Title</label>
+                    <input x-model="knowledgeEntry.entry_title" type="text" id="entry-title" 
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
+                </div>
+                
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select x-model="knowledgeEntry.podcast_category" id="category" 
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
+                        <option value="">Select a category</option>
+                        <option value="Business Strategy">Business Strategy</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Personal Development">Personal Development</option>
+                        <option value="Health & Wellness">Health & Wellness</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="key-insights" class="block text-sm font-medium text-gray-700">Key Insights</label>
+                    <textarea x-model="knowledgeEntry.key_insights" id="key-insights" rows="4"
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                              placeholder="Summarize the key insights from this episode..."></textarea>
+                </div>
+                
+                <div>
+                    <label for="personal-notes" class="block text-sm font-medium text-gray-700">Personal Notes</label>
+                    <textarea x-model="knowledgeEntry.personal_notes" id="personal-notes" rows="3"
+                              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                              placeholder="Add your personal thoughts, reflections, or action items..."></textarea>
+                </div>
+                
+                <div>
+                    <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                    <input x-model="knowledgeEntry.tags" type="text" id="tags"
+                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                           placeholder="leadership, strategy, innovation (comma-separated)">
+                    <p class="mt-1 text-xs text-gray-500">Separate tags with commas</p>
+                </div>
+                
+                <div class="flex items-center justify-between pt-4">
+                    <label class="flex items-center">
+                        <input x-model="knowledgeEntry.is_favorited" type="checkbox" 
+                               class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
+                        <span class="ml-2 text-sm text-gray-700">Mark as favorite</span>
+                    </label>
+                    
+                    <button @click="saveKnowledgeEntry()" :disabled="loading"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50">
+                        <span x-show="!loading">Save Changes</span>
+                        <span x-show="loading" class="flex items-center">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            Saving...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Transcript (collapsed by default) -->
+        <div x-show="analysis?.transcript" class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <button @click="showTranscript = !showTranscript" 
+                        class="flex items-center justify-between w-full text-left">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-file-text mr-2 text-gray-600"></i>
+                        Original Transcript
+                    </h2>
+                    <i :class="showTranscript ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" 
+                       class="text-gray-400"></i>
+                </button>
+            </div>
+            <div x-show="showTranscript" x-collapse class="px-6 py-6">
+                <div class="bg-gray-50 rounded-md p-4 max-h-96 overflow-y-auto">
+                    <pre class="text-sm text-gray-700 whitespace-pre-wrap" x-text="analysis?.transcript"></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Episodes -->
+        <div x-show="relatedEpisodes.length > 0" class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">
+                    <i class="fas fa-link mr-2 text-indigo-600"></i>
+                    Related Episodes
+                </h2>
+            </div>
+            <div class="px-6 py-6">
+                <div class="space-y-4">
+                    <template x-for="episode in relatedEpisodes" :key="episode.id">
+                        <div class="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900" x-text="episode.episode_title"></h4>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    <span x-text="episode.podcast_name"></span> • 
+                                    <span x-text="PodcastApp.formatDate(episode.created_at)"></span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-2 line-clamp-2" 
+                                   x-text="episode.summary || 'No summary available'"></p>
+                            </div>
+                            <a :href="`/analysis/${episode.id}`" 
+                               class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="fas fa-eye mr-1"></i>
+                                View
+                            </a>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div x-show="!loading && !analysis" class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-4xl text-gray-300 mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Analysis not found</h3>
+        <p class="text-gray-600 mb-4">The requested analysis report could not be found.</p>
+        <a href="/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function analysisPage() {
+    return {
+        loading: true,
+        showTranscript: false,
+        
+        // Data
+        analysis: null,
+        knowledgeEntry: null,
+        relatedEpisodes: [],
+        
+        async loadAnalysis() {
+            this.loading = true;
+            
+            try {
+                // Get analysis ID from URL
+                const analysisId = window.location.pathname.split('/').pop();
+                
+                // In a real app, this would be API calls
+                await this.loadAnalysisData(analysisId);
+                await this.loadRelatedEpisodes();
+                
+            } catch (error) {
+                PodcastApp.showNotification('Failed to load analysis', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        async loadAnalysisData(analysisId) {
+            // Simulate analysis data
+            this.analysis = {
+                id: analysisId,
+                episode_title: "The Future of AI in Business Strategy",
+                podcast_name: "Tech Leadership Podcast",
+                created_at: new Date().toISOString(),
+                reading_time_minutes: 7,
+                key_quote: "The companies that will dominate the next decade are those that view AI not as a tool, but as a fundamental business capability that transforms every aspect of their operations.",
+                analysis_result: `This episode provides a comprehensive exploration of how artificial intelligence is reshaping business strategy across industries. The host interviews three Fortune 500 CEOs who have successfully integrated AI into their core business operations.
+
+**Key Takeaways:**
+
+1. **Strategic Integration**: AI should be viewed as a fundamental business capability, not just a technology implementation. Successful companies are rebuilding their business models around AI capabilities.
+
+2. **Cultural Transformation**: The most significant challenge isn't technical—it's cultural. Organizations need to foster a data-driven mindset at every level.
+
+3. **Competitive Advantage**: First-movers in AI adoption are creating sustainable competitive advantages that will be difficult for competitors to replicate.
+
+4. **Risk Management**: While AI presents opportunities, companies must also prepare for new categories of risk, including algorithmic bias and regulatory compliance.
+
+**Implementation Framework:**
+- Start with pilot projects in non-critical areas
+- Invest heavily in data infrastructure and quality
+- Develop internal AI literacy across all departments
+- Create ethical guidelines for AI usage
+
+The episode concludes with actionable advice for leaders looking to begin their AI transformation journey, emphasizing the importance of long-term vision over quick wins.`,
+                transcript: `[Transcript would be the full episode transcript here...]
+
+Host: Welcome to Tech Leadership Podcast. Today we're diving deep into how AI is transforming business strategy with three exceptional leaders...
+
+[Continue with full transcript...]`,
+                in_knowledge_base: false,
+                is_favorited: false
+            };
+            
+            // Initialize knowledge entry if it's in the knowledge base
+            if (this.analysis.in_knowledge_base) {
+                this.knowledgeEntry = {
+                    entry_title: this.analysis.episode_title,
+                    podcast_category: 'Technology',
+                    key_insights: 'AI transformation requires cultural change, not just technology implementation.',
+                    personal_notes: '',
+                    tags: 'AI, business strategy, leadership',
+                    is_favorited: this.analysis.is_favorited
+                };
+            }
+        },
+        
+        async loadRelatedEpisodes() {
+            // Simulate related episodes
+            this.relatedEpisodes = [
+                {
+                    id: 2,
+                    episode_title: "Building Data-Driven Organizations",
+                    podcast_name: "Tech Leadership Podcast",
+                    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    summary: "How successful companies are leveraging data to make better strategic decisions."
+                },
+                {
+                    id: 3,
+                    episode_title: "The Ethics of AI in Business",
+                    podcast_name: "Business Ethics Weekly",
+                    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    summary: "Exploring the ethical considerations and frameworks for responsible AI implementation."
+                }
+            ];
+        },
+        
+        async toggleKnowledgeBase() {
+            try {
+                if (this.analysis.in_knowledge_base) {
+                    // Remove from knowledge base
+                    this.analysis.in_knowledge_base = false;
+                    this.knowledgeEntry = null;
+                    PodcastApp.showNotification('Removed from knowledge base', 'success');
+                } else {
+                    // Add to knowledge base
+                    this.analysis.in_knowledge_base = true;
+                    this.knowledgeEntry = {
+                        entry_title: this.analysis.episode_title,
+                        podcast_category: '',
+                        key_insights: '',
+                        personal_notes: '',
+                        tags: '',
+                        is_favorited: this.analysis.is_favorited
+                    };
+                    PodcastApp.showNotification('Added to knowledge base', 'success');
+                }
+                
+            } catch (error) {
+                PodcastApp.showNotification('Failed to update knowledge base', 'error');
+            }
+        },
+        
+        async toggleFavorite() {
+            try {
+                this.analysis.is_favorited = !this.analysis.is_favorited;
+                if (this.knowledgeEntry) {
+                    this.knowledgeEntry.is_favorited = this.analysis.is_favorited;
+                }
+                
+                const message = this.analysis.is_favorited ? 'Added to favorites' : 'Removed from favorites';
+                PodcastApp.showNotification(message, 'success');
+                
+            } catch (error) {
+                this.analysis.is_favorited = !this.analysis.is_favorited;
+                PodcastApp.showNotification('Failed to update favorite status', 'error');
+            }
+        },
+        
+        async saveKnowledgeEntry() {
+            if (!this.knowledgeEntry) return;
+            
+            this.loading = true;
+            
+            try {
+                // In a real app, this would save to the backend
+                PodcastApp.showNotification('Knowledge base entry saved', 'success');
+                
+            } catch (error) {
+                PodcastApp.showNotification('Failed to save knowledge base entry', 'error');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        shareAnalysis() {
+            if (navigator.share) {
+                navigator.share({
+                    title: this.analysis.episode_title,
+                    text: `Check out this analysis: ${this.analysis.episode_title}`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback to copying URL
+                navigator.clipboard.writeText(window.location.href);
+                PodcastApp.showNotification('Link copied to clipboard', 'success');
+            }
+        },
+        
+        exportAnalysis() {
+            const content = `# ${this.analysis.episode_title}
+
+**Podcast:** ${this.analysis.podcast_name}
+**Date:** ${new Date(this.analysis.created_at).toLocaleDateString()}
+**Reading Time:** ${PodcastApp.formatReadingTime(this.analysis.reading_time_minutes)}
+
+${this.analysis.key_quote ? `## Key Quote\n\n> ${this.analysis.key_quote}\n\n` : ''}
+
+## Analysis
+
+${this.analysis.analysis_result}
+
+---
+Exported from Podcast Analysis v2`;
+            
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${this.analysis.episode_title.replace(/[^a-z0-9]/gi, '_')}_analysis.md`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            PodcastApp.showNotification('Analysis exported successfully', 'success');
+        }
+    }
+}
+</script>
+{% endblock %}
