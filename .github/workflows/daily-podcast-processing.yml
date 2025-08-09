@@ -1,14 +1,13 @@
 name: Daily Podcast Processing
-
   on:
     schedule:
-      - cron: '0 10 * * *'  # 6 AM EDT (10 AM UTC during DST)
-    workflow_dispatch:  # Manual trigger
+      - cron: '0 10 * * *'
+    workflow_dispatch:
 
   jobs:
     process-podcasts:
       runs-on: ubuntu-latest
-      timeout-minutes: 480  # 8 hours max
+      timeout-minutes: 480
 
       steps:
         - name: Checkout repository
