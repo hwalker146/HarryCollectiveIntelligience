@@ -1,9 +1,9 @@
 name: Daily Podcast Processing
-  on:
-    workflow_dispatch:
-  jobs:
-    test:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Test step
-          run: echo "Hello World"
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test step
+        run: echo "Hello World"
