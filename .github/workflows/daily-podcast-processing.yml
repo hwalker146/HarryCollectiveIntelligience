@@ -29,8 +29,7 @@ jobs:
           
       - name: Set up Google credentials
         env:
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON 
-}}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: |
           echo "$GOOGLE_CREDENTIALS_JSON" > credentials.json
           
