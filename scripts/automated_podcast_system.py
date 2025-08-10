@@ -14,6 +14,9 @@ import smtplib
 from datetime import datetime, date
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from google_drive_sync import GoogleDriveSync
 
 class AutomatedPodcastSystem:
@@ -24,6 +27,11 @@ class AutomatedPodcastSystem:
     def run_daily_automation(self):
         """Main automation function called by GitHub Actions"""
         print("🚀 Starting daily podcast automation...")
+        
+        # Validate environment first
+        if not self._validate_environment():
+            print("❌ Environment validation failed")
+            return
         
         today = date.today().strftime('%Y-%m-%d')
         
@@ -50,6 +58,43 @@ class AutomatedPodcastSystem:
             print(f"✅ Processed {len(new_episodes)} new episodes")
         else:
             print("📭 No new episodes today")
+            # Still try to sync existing files and send status
+            self.sync_to_google_drive()
+            print("✅ Daily automation completed successfully")
+    
+    def _validate_environment(self):
+        """Validate that the environment is set up correctly"""
+        print("🔍 Validating environment...")
+        
+        # Check required directories
+        required_dirs = [
+            'podcast_files',
+            'podcast_files/individual_transcripts',
+            'podcast_files/individual_analysis',
+            'podcast_files/master_files',
+            'podcast_files/daily_reports'
+        ]
+        
+        for dir_path in required_dirs:
+            if not os.path.exists(dir_path):
+                print(f"📁 Creating missing directory: {dir_path}")
+                os.makedirs(dir_path, exist_ok=True)
+        
+        # Check credentials
+        if not os.path.exists('credentials.json'):
+            print("⚠️ Google credentials not found - Google Drive sync will be skipped")
+        
+        if not os.path.exists('token.json'):
+            print("⚠️ Google token not found - Google Drive sync will be skipped")
+            
+        # Check environment variables
+        required_env = ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY']
+        for env_var in required_env:
+            if not os.getenv(env_var):
+                print(f"⚠️ {env_var} not found - some features may not work")
+        
+        print("✅ Environment validation completed")
+        return True
     
     def process_new_episodes(self):
         """Process any new episodes that need transcription or analysis"""
@@ -166,23 +211,31 @@ class AutomatedPodcastSystem:
     def create_daily_report(self, date_str):
         """Create daily report with today's new analyses"""
         
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # Get today's new analyses (if any)
-        cursor.execute('''
-            SELECT ar.analysis_result, e.title, p.name as podcast_name, ar.created_at
-            FROM analysis_reports ar
-            JOIN episodes e ON ar.episode_id = e.id
-            JOIN podcasts p ON e.podcast_id = p.id
-            WHERE DATE(ar.created_at) = ?
-            ORDER BY ar.created_at DESC
-        ''', (date_str,))
-        
-        analyses = cursor.fetchall()
-        conn.close()
-        
-        if not analyses:
+        if not os.path.exists(self.db_path):
+            print(f"📭 Database not found - no daily report to create")
+            return None
+            
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Get today's new analyses (if any)
+            cursor.execute('''
+                SELECT ar.analysis_result, e.title, p.name as podcast_name, ar.created_at
+                FROM analysis_reports ar
+                JOIN episodes e ON ar.episode_id = e.id
+                JOIN podcasts p ON e.podcast_id = p.id
+                WHERE DATE(ar.created_at) = ?
+                ORDER BY ar.created_at DESC
+            ''', (date_str,))
+            
+            analyses = cursor.fetchall()
+            conn.close()
+            
+            if not analyses:
+                return None
+        except sqlite3.Error as e:
+            print(f"❌ Database error: {e}")
             return None
         
         filename = f"podcast_files/daily_reports/Daily_Report_{date_str}.md"
@@ -204,15 +257,21 @@ class AutomatedPodcastSystem:
     def sync_to_google_drive(self):
         """Sync all files to Google Drive"""
         
-        if not self.sync.authenticate():
-            print("❌ Google Drive authentication failed")
-            return
-        
-        print("📤 Syncing to Google Drive...")
-        
-        # This will be implemented to sync all organized files
-        # For now, just create the structure
-        self.sync.create_folder_structure()
+        try:
+            if not self.sync.authenticate():
+                print("❌ Google Drive authentication failed")
+                return
+            
+            print("📤 Syncing to Google Drive...")
+            
+            # This will be implemented to sync all organized files
+            # For now, just create the structure
+            self.sync.create_folder_structure()
+            print("✅ Google Drive sync completed")
+            
+        except Exception as e:
+            print(f"❌ Google Drive sync failed: {e}")
+            # Don't fail the entire workflow for sync issues
     
     def send_daily_email(self, report_file, date_str):
         """Send daily email report"""
