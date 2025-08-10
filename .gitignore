@@ -55,7 +55,10 @@ wheels/
 .DS_Store
 Thumbs.db
 
-# Large master files (will be recreated)
+# Keep organized podcast files in Git
+# podcast_files/ directory is tracked
+
+# Large backup files (keep one copy in master_files/)
 COMPLETE_MASTER_*.md
 
 # RSS Intelligence processed data

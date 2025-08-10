@@ -53,7 +53,7 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
-          python improved_daily_automation.py
+          python scripts/automated_podcast_system.py
           
       - name: Upload updated database
         uses: actions/upload-artifact@v4
