@@ -1,0 +1,73 @@
+name: Daily Podcast Processing
+on:
+  schedule:
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+jobs:
+  process-podcasts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set up Google credentials
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: |
+          echo "$GOOGLE_CREDENTIALS_JSON" > credentials.json
+
+      - name: Set up Google token
+        env:
+          GOOGLE_TOKEN_JSON: ${{ secrets.GOOGLE_TOKEN_JSON }}
+        run: |
+          echo "$GOOGLE_TOKEN_JSON" > token.json
+
+      - name: Download database from artifact (if exists)
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: podcast-database
+          path: .
+          if_no_artifact_found: ignore
+
+      - name: Run daily podcast automation
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: |
+          python scripts/automated_podcast_system.py
+
+      - name: Upload updated database
+        uses: actions/upload-artifact@v4
+        with:
+          name: podcast-database
+          path: podcast_app_v2.db
+          retention-days: 30
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: processing-logs-${{ github.run_number }}
+          path: |
+            *.log
+            logs/
+          retention-days: 7
