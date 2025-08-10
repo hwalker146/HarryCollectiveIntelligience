@@ -30,26 +30,42 @@ class GoogleDriveSync:
         """Authenticate with Google Drive API"""
         creds = None
         
+        # Try to load existing valid credentials
         if os.path.exists(self.token_file):
-            creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
+            try:
+                creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
+                print("📋 Loaded existing credentials from token.json")
+            except Exception as e:
+                print(f"❌ Error loading token.json: {e}")
+                return False
             
+        # Check if credentials are valid
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                if not os.path.exists(self.credentials_file):
-                    print(f"❌ Google Drive credentials file not found: {self.credentials_file}")
-                    return False
+                try:
+                    print("🔄 Refreshing expired credentials...")
+                    creds.refresh(Request())
+                    print("✅ Credentials refreshed successfully")
                     
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=0)
+                    # Save refreshed credentials
+                    with open(self.token_file, 'w') as token:
+                        token.write(creds.to_json())
+                        
+                except Exception as e:
+                    print(f"❌ Failed to refresh credentials: {e}")
+                    return False
+            else:
+                print("❌ No valid credentials found and cannot run interactive authentication in GitHub Actions")
+                print("💡 Make sure both GOOGLE_CREDENTIALS_JSON and GOOGLE_TOKEN_JSON secrets are properly configured")
+                return False
                 
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
-                
-        self.service = build('drive', 'v3', credentials=creds)
-        return True
+        try:
+            self.service = build('drive', 'v3', credentials=creds)
+            print("✅ Google Drive service initialized successfully")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to initialize Google Drive service: {e}")
+            return False
     
     def create_folder_structure(self):
         """Create organized folder structure for podcast analysis"""
