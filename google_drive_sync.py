@@ -131,11 +131,23 @@ class GoogleDriveSync:
     def find_file(self, filename, folder_id):
         """Find a file by name in a specific folder"""
         try:
+            # Validate inputs
+            if not filename or not folder_id:
+                print(f"❌ Invalid parameters: filename='{filename}', folder_id='{folder_id}'")
+                return None
+                
             query = f"name='{filename}' and '{folder_id}' in parents and trashed=false"
+            print(f"🔍 Searching for file: {query}")
+            
             results = self.service.files().list(q=query, fields="files(id, name, modifiedTime)").execute()
             items = results.get('files', [])
             
-            return items[0] if items else None
+            if items:
+                print(f"✅ Found existing file: {filename}")
+                return items[0]
+            else:
+                print(f"📁 File not found (will create new): {filename}")
+                return None
             
         except Exception as e:
             print(f"❌ Error finding file {filename}: {e}")

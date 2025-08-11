@@ -335,7 +335,7 @@ class AutomatedPodcastSystem:
                 for filename in os.listdir(transcript_dir):
                     if filename.endswith('.md'):
                         file_path = os.path.join(transcript_dir, filename)
-                        if self.sync.upload_or_update_file(file_path, filename, self.sync.transcripts_folder_id):
+                        if self.sync.upload_or_update_file(file_path, self.sync.transcripts_folder_id):
                             files_uploaded += 1
             
             # Upload daily reports
@@ -344,7 +344,7 @@ class AutomatedPodcastSystem:
                 for filename in os.listdir(report_dir):
                     if filename.endswith('.md'):
                         file_path = os.path.join(report_dir, filename)
-                        if self.sync.upload_or_update_file(file_path, filename, self.sync.daily_folder_id):
+                        if self.sync.upload_or_update_file(file_path, self.sync.daily_folder_id):
                             files_uploaded += 1
             
             print(f"✅ Google Drive sync completed - {files_uploaded} files uploaded/updated")
