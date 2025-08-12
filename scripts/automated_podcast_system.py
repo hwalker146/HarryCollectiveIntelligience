@@ -16,6 +16,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import sys
 import os
+import feedparser
+import requests
+from typing import List, Dict, Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from google_drive_sync import GoogleDriveSync
 
@@ -103,10 +106,161 @@ class AutomatedPodcastSystem:
         return True
     
     def process_new_episodes(self):
-        """Process any new episodes that need transcription or analysis"""
-        # This would integrate with your existing processors
-        # For now, return empty list since processing is handled by other scripts
-        return []
+        """Check RSS feeds and process any new episodes"""
+        print("🔍 Checking RSS feeds for new episodes...")
+        
+        if not os.path.exists(self.db_path):
+            print(f"❌ Database not found: {self.db_path}")
+            return []
+            
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Get active podcasts with RSS feeds
+            cursor.execute('''
+                SELECT id, name, rss_url, last_checked 
+                FROM podcasts 
+                WHERE rss_url IS NOT NULL 
+                AND rss_url != ''
+                AND is_active = 1
+            ''')
+            
+            podcasts = cursor.fetchall()
+            print(f"📡 Found {len(podcasts)} active podcasts to check")
+            
+            total_new_episodes = 0
+            new_episode_details = []
+            
+            for podcast_id, podcast_name, rss_url, last_checked in podcasts:
+                print(f"🎧 Checking {podcast_name}...")
+                
+                # Parse RSS feed
+                rss_data = self.parse_rss_feed(rss_url)
+                
+                if not rss_data["success"]:
+                    print(f"❌ Failed to parse RSS for {podcast_name}: {rss_data['error']}")
+                    continue
+                
+                # Check for new episodes
+                new_episodes_count = 0
+                for episode_data in rss_data["episodes"]:
+                    # Check if episode already exists
+                    cursor.execute('''
+                        SELECT id FROM episodes 
+                        WHERE podcast_id = ? AND (guid = ? OR audio_url = ?)
+                    ''', (podcast_id, episode_data.get("guid"), episode_data.get("audio_url")))
+                    
+                    if cursor.fetchone():
+                        continue  # Episode already exists
+                    
+                    # Insert new episode
+                    cursor.execute('''
+                        INSERT INTO episodes (
+                            podcast_id, title, audio_url, publish_date, 
+                            description, episode_url, guid, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        podcast_id,
+                        episode_data.get("title", "Unknown Title"),
+                        episode_data.get("audio_url"),
+                        episode_data.get("publish_date"),
+                        episode_data.get("description", ""),
+                        episode_data.get("episode_url", ""),
+                        episode_data.get("guid"),
+                        datetime.now().isoformat()
+                    ))
+                    
+                    new_episodes_count += 1
+                    new_episode_details.append({
+                        'podcast_name': podcast_name,
+                        'title': episode_data.get("title", "Unknown Title"),
+                        'id': cursor.lastrowid
+                    })
+                
+                if new_episodes_count > 0:
+                    print(f"✅ Found {new_episodes_count} new episodes for {podcast_name}")
+                    total_new_episodes += new_episodes_count
+                    
+                    # Update podcast's last_checked timestamp
+                    cursor.execute('''
+                        UPDATE podcasts SET last_checked = ? WHERE id = ?
+                    ''', (datetime.now().isoformat(), podcast_id))
+                else:
+                    print(f"📭 No new episodes for {podcast_name}")
+            
+            conn.commit()
+            conn.close()
+            
+            if total_new_episodes > 0:
+                print(f"🎉 Found {total_new_episodes} total new episodes across all podcasts!")
+                return new_episode_details
+            else:
+                print("📭 No new episodes found across any podcasts")
+                return []
+                
+        except Exception as e:
+            print(f"❌ Error checking for new episodes: {e}")
+            return []
+    
+    def parse_rss_feed(self, rss_url: str) -> Dict[str, Any]:
+        """Parse RSS feed and return episode data"""
+        try:
+            # Set user agent to avoid blocking
+            headers = {
+                'User-Agent': 'Podcast Analysis Application v2/2.0.0 (podcast-app@example.com)'
+            }
+            
+            response = requests.get(rss_url, headers=headers, timeout=30)
+            response.raise_for_status()
+            
+            feed = feedparser.parse(response.content)
+            
+            if feed.bozo:
+                return {"success": False, "error": "Invalid RSS feed format"}
+            
+            episodes = []
+            for entry in feed.entries[:5]:  # Limit to latest 5 episodes for daily checks
+                # Extract audio URL
+                audio_url = None
+                for enclosure in getattr(entry, 'enclosures', []):
+                    if enclosure.type and 'audio' in enclosure.type:
+                        audio_url = enclosure.href
+                        break
+                
+                if not audio_url:
+                    continue
+                
+                # Parse publication date
+                publish_date = None
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    publish_date = datetime(*entry.published_parsed[:6]).isoformat()
+                
+                # Get GUID safely
+                guid = getattr(entry, 'id', None) or getattr(entry, 'link', None) or audio_url
+                
+                episode_data = {
+                    "title": getattr(entry, 'title', 'Unknown Title'),
+                    "description": getattr(entry, 'summary', ''),
+                    "audio_url": audio_url,
+                    "episode_url": getattr(entry, 'link', ''),
+                    "guid": guid,
+                    "publish_date": publish_date
+                }
+                
+                episodes.append(episode_data)
+            
+            return {
+                "success": True,
+                "episodes": episodes,
+                "feed_title": getattr(feed.feed, 'title', 'Unknown Podcast'),
+                "feed_description": getattr(feed.feed, 'description', '')
+            }
+            
+        except requests.RequestException as e:
+            return {"success": False, "error": f"Failed to fetch RSS feed: {str(e)}"}
+        except Exception as e:
+            return {"success": False, "error": f"Failed to parse RSS feed: {str(e)}"}
     
     def update_individual_files(self, new_episodes):
         """Append new episodes to individual podcast files"""
@@ -329,13 +483,47 @@ class AutomatedPodcastSystem:
             # Upload all organized files
             files_uploaded = 0
             
-            # Upload individual transcript files
+            # Upload individual transcript files to appropriate podcast folders
             transcript_dir = "podcast_files/individual_transcripts"
             if os.path.exists(transcript_dir):
                 for filename in os.listdir(transcript_dir):
                     if filename.endswith('.md'):
                         file_path = os.path.join(transcript_dir, filename)
-                        if self.sync.upload_or_update_file(file_path, self.sync.transcripts_folder_id):
+                        
+                        # Determine which podcast this file belongs to
+                        podcast_name = self.extract_podcast_name_from_filename(filename)
+                        folder_id = self.sync.get_podcast_folder_id(podcast_name)
+                        
+                        # Use appropriate filename for the folder
+                        new_filename = "Transcripts.md" if not filename.startswith("Master_") else filename
+                        
+                        if self.sync.upload_or_update_file_with_name(file_path, folder_id, new_filename):
+                            files_uploaded += 1
+            
+            # Upload individual analysis files to appropriate podcast folders  
+            analysis_dir = "podcast_files/individual_analysis"
+            if os.path.exists(analysis_dir):
+                for filename in os.listdir(analysis_dir):
+                    if filename.endswith('.md'):
+                        file_path = os.path.join(analysis_dir, filename)
+                        
+                        # Determine which podcast this file belongs to
+                        podcast_name = self.extract_podcast_name_from_filename(filename)
+                        folder_id = self.sync.get_podcast_folder_id(podcast_name)
+                        
+                        # Use appropriate filename for the folder
+                        new_filename = "Analysis.md" if not filename.startswith("Master_") else filename
+                        
+                        if self.sync.upload_or_update_file_with_name(file_path, folder_id, new_filename):
+                            files_uploaded += 1
+            
+            # Upload master files to Master_Files folder
+            master_dir = "podcast_files/master_files"
+            if os.path.exists(master_dir):
+                for filename in os.listdir(master_dir):
+                    if filename.endswith('.md'):
+                        file_path = os.path.join(master_dir, filename)
+                        if self.sync.upload_or_update_file(file_path, self.sync.master_files_folder_id):
                             files_uploaded += 1
             
             # Upload daily reports
@@ -393,6 +581,29 @@ class AutomatedPodcastSystem:
     def get_clean_podcast_name(self, name):
         """Clean podcast name for filename"""
         return name.replace(':', '').replace('/', '').replace(' ', '_').replace(',', '').replace("'", "")
+    
+    def extract_podcast_name_from_filename(self, filename):
+        """Extract podcast name from filename for folder mapping"""
+        # Remove file extensions and common suffixes
+        base_name = filename.replace('_Transcripts.md', '').replace('_Analysis.md', '')
+        
+        # Map filename patterns to display names
+        name_mapping = {
+            'The_Data_Center_Frontier_Show': 'Data Center Frontier',
+            'Data_Center_Frontier': 'Data Center Frontier',
+            'Exchanges_at_Goldman_Sachs': 'Exchanges at Goldman Sachs',
+            'Global_Evolution': 'Global Evolution',
+            'The_Infrastructure_Investor': 'The Infrastructure Investor',
+            'WSJ_Whats_News': 'WSJ What\'s News',
+            'The_Intelligence': 'The Intelligence',
+            'Crossroads_The_Infrastructure_Podcast': 'Crossroads Infrastructure',
+            'Crossroads': 'Crossroads Infrastructure',
+            'Business_Strategy_Podcast': 'Business Strategy Podcast',
+            'Global_Energy_Transition': 'Global Energy Transition',
+            'Tech_Innovation_Weekly': 'Tech Innovation Weekly'
+        }
+        
+        return name_mapping.get(base_name, base_name)
     
     def find_chronological_position(self, lines, target_date):
         """Find the right position to insert episode chronologically"""

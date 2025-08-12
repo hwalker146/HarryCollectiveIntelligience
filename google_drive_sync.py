@@ -73,18 +73,37 @@ class GoogleDriveSync:
             return False
         
         # Create main folder
-        main_folder = self.create_folder("Podcast Analysis - Infrastructure & Finance")
+        main_folder = self.create_folder("Podcast Intelligence System")
         if not main_folder:
             return False
             
         self.podcast_folder_id = main_folder['id']
         
-        # Create subfolders
-        self.transcripts_folder_id = self.create_folder("Master Transcripts", self.podcast_folder_id)['id']
-        self.analysis_folder_id = self.create_folder("Master Analysis Reports", self.podcast_folder_id)['id']
-        self.daily_folder_id = self.create_folder("Daily Reports", self.podcast_folder_id)['id']
+        # Create top-level organizational folders
+        active_folder = self.create_folder("01_Active_Content", self.podcast_folder_id)
+        archive_folder = self.create_folder("02_Archive", self.podcast_folder_id)
+        system_folder = self.create_folder("03_System", self.podcast_folder_id)
         
-        print(f"✅ Created folder structure in Google Drive")
+        if not all([active_folder, archive_folder, system_folder]):
+            return False
+            
+        self.active_folder_id = active_folder['id']
+        self.archive_folder_id = archive_folder['id']
+        self.system_folder_id = system_folder['id']
+        
+        # Create subfolders under Active Content
+        self.individual_podcasts_folder_id = self.create_folder("Individual_Podcasts", self.active_folder_id)['id']
+        self.master_files_folder_id = self.create_folder("Master_Files", self.active_folder_id)['id']
+        self.daily_folder_id = self.create_folder("Daily_Reports", self.active_folder_id)['id']
+        
+        # Create system subfolders
+        self.database_folder_id = self.create_folder("Database_Backups", self.system_folder_id)['id']
+        self.config_folder_id = self.create_folder("Configuration_Files", self.system_folder_id)['id']
+        
+        # Create individual podcast folders
+        self.create_podcast_folders()
+        
+        print(f"✅ Created coherent folder structure in Google Drive")
         return True
     
     def create_folder(self, name, parent_id=None):
@@ -153,6 +172,54 @@ class GoogleDriveSync:
             print(f"❌ Error finding file {filename}: {e}")
             return None
     
+    def create_podcast_folders(self):
+        """Create individual folders for each podcast"""
+        # Map of clean names to display names
+        podcast_folders = {
+            "Data_Center_Frontier": "Data Center Frontier",
+            "Exchanges_at_Goldman_Sachs": "Exchanges at Goldman Sachs", 
+            "Global_Evolution": "Global Evolution",
+            "The_Infrastructure_Investor": "The Infrastructure Investor",
+            "WSJ_Whats_News": "WSJ What's News",
+            "The_Intelligence": "The Intelligence",
+            "Crossroads_Infrastructure": "Crossroads Infrastructure",
+            "Business_Strategy": "Business Strategy Podcast",
+            "Global_Energy_Transition": "Global Energy Transition",
+            "Tech_Innovation_Weekly": "Tech Innovation Weekly"
+        }
+        
+        self.podcast_folder_ids = {}
+        
+        for clean_name, display_name in podcast_folders.items():
+            folder = self.create_folder(display_name, self.individual_podcasts_folder_id)
+            if folder:
+                self.podcast_folder_ids[clean_name] = folder['id']
+        
+        print(f"✅ Created {len(self.podcast_folder_ids)} individual podcast folders")
+    
+    def get_podcast_folder_id(self, podcast_name):
+        """Get folder ID for a specific podcast"""
+        # Map common podcast name variations to folder keys
+        name_mapping = {
+            "The Data Center Frontier Show": "Data_Center_Frontier",
+            "Data Center Frontier": "Data_Center_Frontier",
+            "Exchanges at Goldman Sachs": "Exchanges_at_Goldman_Sachs",
+            "Global Evolution": "Global_Evolution",
+            "The Infrastructure Investor": "The_Infrastructure_Investor",
+            "WSJ What's News": "WSJ_Whats_News",
+            "The Intelligence": "The_Intelligence",
+            "Crossroads: The Infrastructure Podcast": "Crossroads_Infrastructure",
+            "Business Strategy Podcast": "Business_Strategy",
+            "Global Energy Transition": "Global_Energy_Transition",
+            "Tech Innovation Weekly": "Tech_Innovation_Weekly"
+        }
+        
+        folder_key = name_mapping.get(podcast_name)
+        if folder_key and hasattr(self, 'podcast_folder_ids'):
+            return self.podcast_folder_ids.get(folder_key)
+        
+        return self.individual_podcasts_folder_id  # Fallback to main folder
+    
     def upload_or_update_file(self, local_file_path, folder_id, description=None):
         """Upload a new file or update existing file in Google Drive"""
         try:
@@ -199,6 +266,52 @@ class GoogleDriveSync:
             
         except Exception as e:
             print(f"❌ Error uploading {local_file_path}: {e}")
+            return None
+    
+    def upload_or_update_file_with_name(self, local_file_path, folder_id, target_filename, description=None):
+        """Upload a file with a specific target filename"""
+        try:
+            # Check if file exists with target name
+            existing_file = self.find_file(target_filename, folder_id)
+            
+            file_metadata = {
+                'name': target_filename,
+                'parents': [folder_id]
+            }
+            
+            if description:
+                file_metadata['description'] = description
+            
+            media = MediaFileUpload(local_file_path, resumable=True)
+            
+            if existing_file:
+                # Update existing file - don't include parents in update
+                update_metadata = {
+                    'name': target_filename
+                }
+                if description:
+                    update_metadata['description'] = description
+                
+                file = self.service.files().update(
+                    fileId=existing_file['id'],
+                    body=update_metadata,
+                    media_body=media,
+                    fields='id, name, modifiedTime'
+                ).execute()
+                print(f"🔄 Updated: {target_filename}")
+            else:
+                # Create new file
+                file = self.service.files().create(
+                    body=file_metadata,
+                    media_body=media,
+                    fields='id, name, modifiedTime'
+                ).execute()
+                print(f"📤 Uploaded: {target_filename}")
+            
+            return file
+            
+        except Exception as e:
+            print(f"❌ Error uploading {local_file_path} as {target_filename}: {e}")
             return None
     
     def sync_master_files(self):
