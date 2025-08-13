@@ -285,13 +285,13 @@ class AutomatedPodcastSystem:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Find the right place to insert (after the header, before first date section)
-        episode_date = episode['pub_date'][:10]
+        # Find the right place to insert (after the header, before first date section)  
+        episode_date = episode.get('publish_date', datetime.now().strftime('%Y-%m-%d'))[:10]
         
         new_entry = f"\n## {episode_date}\n\n"
         new_entry += f"### {episode['title']}\n"
         new_entry += f"**Episode ID:** {episode['id']}\n"
-        new_entry += f"**Date:** {episode['pub_date']}\n\n"
+        new_entry += f"**Date:** {episode.get('publish_date', 'Unknown')}\n\n"
         new_entry += f"{episode['transcript']}\n\n"
         new_entry += "---\n\n"
         
@@ -310,12 +310,12 @@ class AutomatedPodcastSystem:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        episode_date = episode['pub_date'][:10]
+        episode_date = episode.get('publish_date', datetime.now().strftime('%Y-%m-%d'))[:10]
         
         new_entry = f"\n## {episode_date}\n\n"
         new_entry += f"### {episode['title']}\n"
         new_entry += f"**Episode ID:** {episode['id']}\n"
-        new_entry += f"**Publication Date:** {episode['pub_date']}\n"
+        new_entry += f"**Publication Date:** {episode.get('publish_date', 'Unknown')}\n"
         new_entry += f"**Analysis Date:** {datetime.now().isoformat()}\n\n"
         
         if episode.get('key_quote'):
@@ -364,7 +364,7 @@ class AutomatedPodcastSystem:
                 
                 f.write(f"### {episode['podcast']}: {episode['title']}\n")
                 f.write(f"**Episode ID:** {episode['id']}\n")
-                f.write(f"**Date:** {episode['pub_date']}\n\n")
+                f.write(f"**Date:** {episode.get('publish_date', 'Unknown')}\n\n")
                 f.write(f"{episode['transcript']}\n\n")
                 f.write("---\n\n")
     
