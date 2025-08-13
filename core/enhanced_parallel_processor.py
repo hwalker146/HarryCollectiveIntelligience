@@ -537,52 +537,26 @@ Extract the 3 most insightful quotes that capture:
         print("✅ Custom prompts configured")
     
     def get_target_episodes(self) -> List[int]:
-        """Get all target episode IDs"""
+        """Get episodes that need transcription and analysis"""
         conn = self.get_db_connection()
         cursor = conn.cursor()
         
-        all_episodes = []
-        
-        # Infrastructure podcasts - all episodes
-        for podcast_id in [3, 6, 7]:
-            cursor.execute("""
-                SELECT id FROM episodes 
-                WHERE podcast_id = ? 
-                ORDER BY pub_date DESC, created_at DESC
-            """, (podcast_id,))
-            episodes = [row[0] for row in cursor.fetchall()]
-            all_episodes.extend(episodes)
-        
-        # Goldman Sachs - last 50 episodes
+        # Get episodes without real transcripts from all active podcasts
         cursor.execute("""
-            SELECT id FROM episodes 
-            WHERE podcast_id = 8 
-            ORDER BY pub_date DESC, created_at DESC
-            LIMIT 50
+            SELECT e.id FROM episodes e
+            JOIN podcasts p ON e.podcast_id = p.id
+            WHERE e.audio_url IS NOT NULL
+            AND (e.transcript IS NULL OR LENGTH(e.transcript) < 5000)
+            AND p.id IN (2, 3, 4, 5, 6, 7, 8, 10)  -- Active podcasts
+            AND p.is_active = 1
+            ORDER BY e.publish_date DESC
         """)
-        episodes = [row[0] for row in cursor.fetchall()]
-        all_episodes.extend(episodes)
         
-        # Global Evolution - all episodes
-        cursor.execute("""
-            SELECT id FROM episodes 
-            WHERE podcast_id = 14 
-            ORDER BY pub_date DESC, created_at DESC
-        """)
         episodes = [row[0] for row in cursor.fetchall()]
-        all_episodes.extend(episodes)
-        
-        # Data Center Frontier - all episodes
-        cursor.execute("""
-            SELECT id FROM episodes 
-            WHERE podcast_id = 15 
-            ORDER BY pub_date DESC, created_at DESC
-        """)
-        episodes = [row[0] for row in cursor.fetchall()]
-        all_episodes.extend(episodes)
-        
         conn.close()
-        return all_episodes
+        
+        print(f"📊 Found {len(episodes)} episodes needing processing")
+        return episodes
     
     def create_unified_report(self) -> str:
         """Create unified analysis report organized by date and podcast"""
@@ -596,13 +570,13 @@ Extract the 3 most insightful quotes that capture:
                 ar.key_quote,
                 ar.created_at,
                 e.title as episode_title,
-                e.pub_date,
+                e.publish_date,
                 p.name as podcast_name
             FROM analysis_reports ar
             JOIN episodes e ON ar.episode_id = e.id
             JOIN podcasts p ON e.podcast_id = p.id
             WHERE p.id IN (3, 6, 7, 8, 14, 15) AND ar.user_id = 2
-            ORDER BY e.pub_date DESC, p.name
+            ORDER BY e.publish_date DESC, p.name
         """)
         
         results = cursor.fetchall()
@@ -619,12 +593,12 @@ Total Episodes Analyzed: {len(results)}
         
         current_date = None
         for result in results:
-            analysis, quote, created_at, episode_title, pub_date, podcast_name = result
+            analysis, quote, created_at, episode_title, publish_date, podcast_name = result
             
             # Group by publication date
-            if pub_date != current_date:
-                current_date = pub_date
-                report += f"\n## {pub_date}\n\n"
+            if publish_date != current_date:
+                current_date = publish_date
+                report += f"\n## {publish_date}\n\n"
             
             report += f"### {podcast_name}: {episode_title}\n\n"
             report += f"**Analysis Date:** {created_at}\n\n"

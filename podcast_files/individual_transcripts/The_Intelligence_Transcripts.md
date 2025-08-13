@@ -3,6 +3,86 @@ Generated: 2025-08-09 19:22:12
 Total Episodes: 1
 
 
+
+
+
+
+
+## 2025-08-12
+
+### Next top model: GPT-5 and its AI rivals
+**Episode ID:** 5054
+**Date:** 2025-08-12T10:02:46
+
+[Transcript for episode: Next top model: GPT-5 and its AI rivals]
+
+This episode was recently detected and added to the system. Audio URL: https://sphinx.acast.com/p/acast/s/theintelligencepodcast/e/689b10105edc63baa3e3d883/media.mp3?tk=eyJ0ayI6ImRlZmF1bHQiLCJhZHMiOnRydWUsInNwb25zIjp0cnVlLCJzdGF0dXMiOiJwdWJsaWMifQ==&sig=pXzP_575mmn64RDcKlz1DMAFGG0Sz1NBhCBtC_qtcCA
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-11
+
+### The summit of its parts: Ukraine, Trump and Putin
+**Episode ID:** 5055
+**Date:** 2025-08-11T10:13:50
+
+[Transcript for episode: The summit of its parts: Ukraine, Trump and Putin]
+
+This episode was recently detected and added to the system. Audio URL: https://sphinx.acast.com/p/acast/s/theintelligencepodcast/e/6899c25ff9482328d0f0840b/media.mp3?tk=eyJ0ayI6ImRlZmF1bHQiLCJhZHMiOnRydWUsInNwb25zIjp0cnVlLCJzdGF0dXMiOiJwdWJsaWMifQ==&sig=61wr07-TpKG8kfFe80wzo__QHH1KhqWD910c6Rqg92M
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-08
+
+### Not all’s fair: Israel and accountability
+**Episode ID:** 5056
+**Date:** 2025-08-08T10:16:33
+
+[Transcript for episode: Not all’s fair: Israel and accountability]
+
+This episode was recently detected and added to the system. Audio URL: https://sphinx.acast.com/p/acast/s/theintelligencepodcast/e/6895c72386fca1362852b0ce/media.mp3?tk=eyJ0ayI6ImRlZmF1bHQiLCJhZHMiOnRydWUsInNwb25zIjp0cnVlLCJzdGF0dXMiOiJwdWJsaWMifQ==&sig=7bKDeTJ7mNMWhKXKlphYwLUHC2-l0Uhq2_5Tc6Ff458
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-07
+
+### Duty regime: America’s consumers will foot the tariff bill
+**Episode ID:** 5057
+**Date:** 2025-08-07T09:51:31
+
+[Transcript for episode: Duty regime: America’s consumers will foot the tariff bill]
+
+This episode was recently detected and added to the system. Audio URL: https://sphinx.acast.com/p/acast/s/theintelligencepodcast/e/6894772386fca13628ed8731/media.mp3?tk=eyJ0ayI6ImRlZmF1bHQiLCJhZHMiOnRydWUsInNwb25zIjp0cnVlLCJzdGF0dXMiOiJwdWJsaWMifQ==&sig=NZPPiIFpjdFay3vK60acImvSBPZ9E6_hebOO_EguO4U
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-06
+
+### Unsteady state: Somalia in disarray
+**Episode ID:** 5058
+**Date:** 2025-08-06T09:55:52
+
+[Transcript for episode: Unsteady state: Somalia in disarray]
+
+This episode was recently detected and added to the system. Audio URL: https://sphinx.acast.com/p/acast/s/theintelligencepodcast/e/6893223bec0dff69a07545ed/media.mp3?tk=eyJ0ayI6ImRlZmF1bHQiLCJhZHMiOnRydWUsInNwb25zIjp0cnVlLCJzdGF0dXMiOiJwdWJsaWMifQ==&sig=2AjPXn5aMw8bFlefZQG_53oh3KhN_z2wY9qnIp7iXd4
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
 ## 2025-07-29
 
 ### Pause for little effect: a trickle of aid in Gaza

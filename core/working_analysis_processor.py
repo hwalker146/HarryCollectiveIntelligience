@@ -172,11 +172,11 @@ Extract 5-7 most significant quotes focusing on:
         SELECT e.id, e.title, e.transcript, p.id as podcast_id, p.name as podcast_name
         FROM episodes e
         JOIN podcasts p ON e.podcast_id = p.id
-        WHERE e.podcast_id IN (3, 6, 7, 8) 
+        WHERE e.podcast_id IN (3, 6, 7, 8, 10) 
         AND e.transcript IS NOT NULL AND e.transcript != ''
         AND LENGTH(e.transcript) > 1000
         AND e.id NOT IN (SELECT episode_id FROM analysis_reports WHERE episode_id IS NOT NULL)
-        ORDER BY e.pub_date DESC
+        ORDER BY e.publish_date DESC
         LIMIT 20
     """)
     

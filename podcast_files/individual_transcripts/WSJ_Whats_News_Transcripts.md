@@ -3,6 +3,86 @@ Generated: 2025-08-09 19:22:12
 Total Episodes: 7
 
 
+
+
+
+
+
+## 2025-08-12
+
+### ‘Honest and Accurate’: Trump Names His Pick for Labor Data Body
+**Episode ID:** 5048
+**Date:** 2025-08-12T10:29:00
+
+[Transcript for episode: ‘Honest and Accurate’: Trump Names His Pick for Labor Data Body]
+
+This episode was recently detected and added to the system. Audio URL: https://pdst.fm/e/chrt.fm/track/1F1B1F/traffic.megaphone.fm/WSJ5193775179.mp3?updated=1754997492
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-11
+
+### Trump Plans to Deploy the National Guard to D.C.
+**Episode ID:** 5049
+**Date:** 2025-08-11T20:51:00
+
+[Transcript for episode: Trump Plans to Deploy the National Guard to D.C.]
+
+This episode was recently detected and added to the system. Audio URL: https://pdst.fm/e/chrt.fm/track/1F1B1F/traffic.megaphone.fm/WSJ4689804338.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-11
+
+### What's News in Earnings: Why Some Money Managers Are Trailing the Market
+**Episode ID:** 5050
+**Date:** 2025-08-11T16:00:00
+
+[Transcript for episode: What's News in Earnings: Why Some Money Managers Are Trailing the Market]
+
+This episode was recently detected and added to the system. Audio URL: https://pdst.fm/e/chrt.fm/track/1F1B1F/traffic.megaphone.fm/WSJ6160375302.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-11
+
+### U.S. Government To Take Cut of Chip Sales to China
+**Episode ID:** 5051
+**Date:** 2025-08-11T10:05:00
+
+[Transcript for episode: U.S. Government To Take Cut of Chip Sales to China]
+
+This episode was recently detected and added to the system. Audio URL: https://pdst.fm/e/chrt.fm/track/1F1B1F/traffic.megaphone.fm/WSJ5385733526.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-10
+
+### How Small Businesses Can Fight a Growing Wave of Cyber Crime
+**Episode ID:** 5052
+**Date:** 2025-08-10T10:00:00
+
+[Transcript for episode: How Small Businesses Can Fight a Growing Wave of Cyber Crime]
+
+This episode was recently detected and added to the system. Audio URL: https://pdst.fm/e/chrt.fm/track/1F1B1F/traffic.megaphone.fm/WSJ5630188508.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
 ## 2025-07-29
 
 ### Why It’s Taken Until Now for the U.S.’s First Coast-to-Coast Rail Operator

@@ -3,6 +3,38 @@ Generated: 2025-08-10 00:06:42
 Total Episodes: 66
 
 
+
+
+## 2025-08-12
+
+### Podcast: Traka VP Craig Newell Discusses the Critical Role of Key and Asset Management in Data Center Operations
+**Episode ID:** 5065
+**Date:** 2025-08-12T03:01:00
+
+[Transcript for episode: Podcast: Traka VP Craig Newell Discusses the Critical Role of Key and Asset Management in Data Center Operations]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/s6usew6i3rzg34yd/DCF_August_Podcast_2_mixdown_FINAL6qjde.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-07
+
+### Uptime Institute’s Jay Dietrich on Why Net Zero Isn’t Enough for Sustainable Data Centers
+**Episode ID:** 5066
+**Date:** 2025-08-07T17:44:44
+
+[Transcript for episode: Uptime Institute’s Jay Dietrich on Why Net Zero Isn’t Enough for Sustainable Data Centers]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/swcssqpx3k4zwdxh/DCF-Pod-Uptime-Aug25_mixdown.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
 ## 2025-08-07
 
 ### Uptime Institute’s Jay Dietrich on Why Net Zero Isn’t Enough for Sustainable Data Centers
@@ -14,7 +46,55 @@ Total Episodes: 66
 ---
 
 
+
 ## 2025-07-29
+
+### LiquidStack CEO Joe Capes on GigaModular, Direct-to-Chip Cooling, and AI’s Thermal Future
+**Episode ID:** 5067
+**Date:** 2025-07-29T21:29:30
+
+[Transcript for episode: LiquidStack CEO Joe Capes on GigaModular, Direct-to-Chip Cooling, and AI’s Thermal Future]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/zkkt4v47n2wn47bb/DCF-Pod-Liquidstack-July29_mixdown.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-07-29
+
+
+
+## 2025-07-24
+
+### Leveraging Heat as an Asset in Data Center Operations
+**Episode ID:** 5068
+**Date:** 2025-07-24T03:00:00
+
+[Transcript for episode: Leveraging Heat as an Asset in Data Center Operations]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/77sb3k5b773t55i3/DCF_Trane_June_Podcast_mixdown6xmw7.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-07-22
+
+### Powering AI Data Centers: Eaton on Infrastructure, Cooling, and What’s Next
+**Episode ID:** 5069
+**Date:** 2025-07-22T17:02:19
+
+[Transcript for episode: Powering AI Data Centers: Eaton on Infrastructure, Cooling, and What’s Next]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/kst2inpntva2vae3/DCF-Pod-Eaton-July25_mixdown.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
 
 ### LiquidStack CEO Joe Capes on GigaModular, Direct-to-Chip Cooling, and AI’s Thermal Future
 **Episode ID:** 5081

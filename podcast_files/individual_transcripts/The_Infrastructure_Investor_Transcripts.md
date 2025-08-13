@@ -3,6 +3,22 @@ Generated: 2025-08-10 00:06:42
 Total Episodes: 22
 
 
+
+## 2025-07-31
+
+### Stonepeak: ‘Power scarcity gave data centres their moat’
+**Episode ID:** 5053
+**Date:** 2025-07-31T07:00:00
+
+[Transcript for episode: Stonepeak: ‘Power scarcity gave data centres their moat’]
+
+This episode was recently detected and added to the system. Audio URL: https://mcdn.podbean.com/mf/web/4cuvu5mvam9rhkdd/StepstoneInfraFINAL.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
 ## 2025-06-26
 
 ### LP-leds rule by volume, but GP-leds are very sizeable

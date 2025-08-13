@@ -3,6 +3,54 @@ Generated: 2025-08-10 00:06:42
 Total Episodes: 59
 
 
+
+
+
+## 2025-08-12
+
+### Searching for Signals: BlackRock’s Savi on the Future of Systematic Investing
+**Episode ID:** 5062
+**Date:** 2025-08-12T04:00:00
+
+[Transcript for episode: Searching for Signals: BlackRock’s Savi on the Future of Systematic Investing]
+
+This episode was recently detected and added to the system. Audio URL: https://chrt.fm/track/F81DEC/traffic.megaphone.fm/GLD2995723725.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-07
+
+### Finding the Right Problems: How Sutter Hill Ventures’ Mike Speiser Creates Great Companies
+**Episode ID:** 5063
+**Date:** 2025-08-07T12:28:00
+
+[Transcript for episode: Finding the Right Problems: How Sutter Hill Ventures’ Mike Speiser Creates Great Companies]
+
+This episode was recently detected and added to the system. Audio URL: https://chrt.fm/track/F81DEC/traffic.megaphone.fm/GLD9731652551.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
+## 2025-08-05
+
+### AI Exchanges: AI’s Impact on Employment
+**Episode ID:** 5064
+**Date:** 2025-08-05T18:00:00
+
+[Transcript for episode: AI Exchanges: AI’s Impact on Employment]
+
+This episode was recently detected and added to the system. Audio URL: https://chrt.fm/track/F81DEC/traffic.megaphone.fm/GLD2439476283.mp3
+
+Full transcription and analysis will be available once the audio processing pipeline is complete.
+
+---
+
+
 ## 2025-07-29
 
 ### Revenge of the Meme Stocks

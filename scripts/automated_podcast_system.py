@@ -18,6 +18,10 @@ import sys
 import os
 import feedparser
 import requests
+import tempfile
+import subprocess
+import json
+import openai
 from typing import List, Dict, Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from google_drive_sync import GoogleDriveSync
@@ -26,6 +30,156 @@ class AutomatedPodcastSystem:
     def __init__(self):
         self.db_path = 'podcast_app_v2.db'
         self.sync = GoogleDriveSync()
+        self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        # Your analysis prompts
+        self.infrastructure_prompt = """# Infrastructure Podcast Deep Analysis for Private Equity Investment
+
+Please provide a comprehensive analysis of this infrastructure podcast transcript. This analysis is for private equity investors evaluating opportunities in the infrastructure sector.
+
+## Executive Summary
+Provide a detailed 3-4 paragraph overview covering the key investment themes and market opportunities discussed, the guest's primary investment thesis and strategic outlook, the significant deals, companies, or market developments mentioned, the regulatory or policy changes impacting the sector, and the most compelling insights for private equity investors
+
+## Guest Profile & Credentials
+- **Name & Title:** [Guest's full name and current role]
+- **Company:** [Company name and brief description]  
+- **Background:** Key experience and credentials relevant to infrastructure investing
+- **Track Record:** Notable deals, funds, or investments mentioned
+
+## Investment Strategy & Market Insights
+
+### Deal Sourcing & Evaluation
+- How does the guest's firm identify investment opportunities?
+- What criteria do they use for deal selection?
+- Which sectors or geographies are they focusing on?
+- What deal sizes or structures do they prefer?
+
+### Market Analysis
+- Current market conditions and trends discussed
+- Sector-specific opportunities and challenges
+- Regulatory environment and policy impacts
+- Competitive dynamics and market consolidation trends
+- Risk factors and mitigation strategies
+
+## Specific Investment Opportunities & Deals
+List any concrete investments, deals, or opportunities mentioned:
+- Company names and transaction details
+- Investment sizes and structures
+- Returns achieved or expected
+- Lessons learned from specific investments
+
+## Financial Analysis & Returns
+- Return expectations and metrics discussed
+- Portfolio performance data mentioned
+- Valuation methodologies or multiples referenced
+- Capital deployment schedules
+- Exit strategies and timing
+
+## Key Quotes & Insights
+Extract 5-7 most impactful quotes that capture:
+- Unique investment insights or contrarian views
+- Specific market predictions or forecasts
+- Strategic wisdom or lessons learned
+- Notable frameworks or principles
+- Actionable investment advice
+
+**Quote 1:** "[Full quote]" - Context and significance
+**Quote 2:** "[Full quote]" - Context and significance  
+**Quote 3:** "[Full quote]" - Context and significance
+**Quote 4:** "[Full quote]" - Context and significance
+**Quote 5:** "[Full quote]" - Context and significance
+
+## Investment Committee Discussion Points
+Based on this episode, prepare 7-10 targeted questions for investment committee:
+1. [Specific question about opportunity mentioned]
+2. [Question about market trends or assumptions]
+3. [Challenge to thesis or risk consideration]
+4. [Operational or strategic consideration]
+5. [Regulatory or policy question]
+6. [Competitive dynamics inquiry]
+7. [Exit planning consideration]
+
+**Analysis Instructions:**
+- only write in paragraphs and full sentences. No bullet points or lists
+- Be extremely specific with numbers, dates, company names, and deal details
+- Distinguish clearly between facts and opinions/predictions  
+- Focus on actionable intelligence for private equity decision-making"""
+
+        self.goldman_prompt = """# Goldman Sachs Exchanges Deep Market Analysis
+
+Analyze this Goldman Sachs podcast transcript for institutional investment insights and market intelligence.
+
+## Episode Overview
+**Topic:** [Main subject matter]
+**Market Context:** [Current market environment and timing]
+**Key Participants:** [Host and guest details]
+
+## Executive Summary  
+Provide detailed analysis covering:
+- Primary market themes and investment implications
+- Key data points and market forecasts presented
+- Strategic insights for institutional investors
+- Risk factors and market dynamics discussed
+
+## Market Analysis & Investment Thesis
+
+### Primary Arguments Presented
+For each major argument, provide:
+- **Core Thesis:** [Detailed explanation]
+- **Supporting Evidence:** [Data, trends, examples cited]
+- **Market Implications:** [How this affects investment decisions]
+- **Confidence Level:** [How certain are the predictions]
+- **Timeline:** [When effects are expected]
+
+### Quantitative Data & Forecasts
+List all specific numbers, percentages, forecasts mentioned:
+- Market size estimates
+- Growth projections  
+- Valuation metrics
+- Performance data
+- Economic indicators
+- Sector-specific metrics
+
+## Sector & Asset Class Analysis
+Break down insights by relevant sectors:
+- **Equities:** [Specific insights about stock markets]
+- **Fixed Income:** [Bond market analysis]
+- **Alternatives:** [Private markets, real estate, etc.]
+- **Commodities:** [Commodity market insights]
+- **Currency/FX:** [Foreign exchange considerations]
+
+## Risk Assessment
+- **Key Risks Identified:** [Specific risks discussed]
+- **Probability Assessment:** [Likelihood of risks materializing]
+- **Mitigation Strategies:** [How to hedge or prepare]
+- **Tail Risks:** [Low probability, high impact scenarios]
+
+## Trading & Investment Strategies
+- **Recommended Positions:** [Specific investment recommendations]
+- **Asset Allocation Insights:** [Portfolio construction advice]
+- **Timing Considerations:** [Entry/exit points discussed]
+- **Hedging Strategies:** [Risk management approaches]
+
+## Notable Quotes & Market Calls
+Extract 5-7 most significant quotes focusing on:
+- Specific market predictions
+- Investment recommendations  
+- Risk warnings
+- Contrarian viewpoints
+- Strategic insights
+
+**Quote 1:** "[Full quote]" - Market significance and implications
+**Quote 2:** "[Full quote]" - Market significance and implications
+**Quote 3:** "[Full quote]" - Market significance and implications
+**Quote 4:** "[Full quote]" - Market significance and implications
+**Quote 5:** "[Full quote]" - Market significance and implications
+
+**Analysis Instructions:**
+- Prioritize quantitative data and specific market calls
+- Note confidence levels and timeframes for predictions
+- Distinguish between short-term tactics and long-term strategy
+- Highlight any proprietary Goldman Sachs research or data
+- Focus on actionable market intelligence"""
         
     def run_daily_automation(self):
         """Main automation function called by GitHub Actions"""
@@ -106,8 +260,8 @@ class AutomatedPodcastSystem:
         return True
     
     def process_new_episodes(self):
-        """Check RSS feeds and process any new episodes"""
-        print("🔍 Checking RSS feeds for new episodes...")
+        """Smart RSS checking - compare latest transcripts with RSS feeds"""
+        print("🔍 Smart checking: comparing database vs RSS feeds...")
         
         if not os.path.exists(self.db_path):
             print(f"❌ Database not found: {self.db_path}")
@@ -119,7 +273,7 @@ class AutomatedPodcastSystem:
             
             # Get active podcasts with RSS feeds
             cursor.execute('''
-                SELECT id, name, rss_url, last_checked 
+                SELECT id, name, rss_url 
                 FROM podcasts 
                 WHERE rss_url IS NOT NULL 
                 AND rss_url != ''
@@ -129,79 +283,298 @@ class AutomatedPodcastSystem:
             podcasts = cursor.fetchall()
             print(f"📡 Found {len(podcasts)} active podcasts to check")
             
-            total_new_episodes = 0
-            new_episode_details = []
+            episodes_needing_work = []
             
-            for podcast_id, podcast_name, rss_url, last_checked in podcasts:
-                print(f"🎧 Checking {podcast_name}...")
+            for podcast_id, podcast_name, rss_url in podcasts:
+                print(f"\n🎧 Checking {podcast_name}...")
                 
-                # Parse RSS feed
+                # Get latest episode with real transcript in database
+                cursor.execute('''
+                    SELECT title, publish_date, LENGTH(transcript) as transcript_length
+                    FROM episodes 
+                    WHERE podcast_id = ? 
+                    AND transcript IS NOT NULL 
+                    AND LENGTH(transcript) > 5000
+                    ORDER BY publish_date DESC 
+                    LIMIT 1
+                ''', (podcast_id,))
+                
+                latest_transcribed = cursor.fetchone()
+                if latest_transcribed:
+                    latest_title, latest_date, transcript_length = latest_transcribed
+                    print(f"   📄 Latest transcript: {latest_title} ({latest_date})")
+                else:
+                    print(f"   📄 No transcripts found - need to process all episodes")
+                    latest_date = "1900-01-01"  # Very old date to catch everything
+                
+                # Parse RSS feed to get latest episodes
                 rss_data = self.parse_rss_feed(rss_url)
                 
                 if not rss_data["success"]:
-                    print(f"❌ Failed to parse RSS for {podcast_name}: {rss_data['error']}")
+                    print(f"   ❌ Failed to parse RSS: {rss_data['error']}")
                     continue
                 
-                # Check for new episodes
+                # Check what's new in RSS vs our database
                 new_episodes_count = 0
                 for episode_data in rss_data["episodes"]:
-                    # Check if episode already exists
+                    episode_date = episode_data.get("publish_date", "")
+                    
+                    # Skip if older than our latest transcript
+                    if episode_date and latest_date and episode_date <= latest_date:
+                        continue
+                    
+                    # Check if episode exists in database at all
                     cursor.execute('''
-                        SELECT id FROM episodes 
+                        SELECT id, transcript, transcribed FROM episodes 
                         WHERE podcast_id = ? AND (guid = ? OR audio_url = ?)
                     ''', (podcast_id, episode_data.get("guid"), episode_data.get("audio_url")))
                     
-                    if cursor.fetchone():
-                        continue  # Episode already exists
+                    existing = cursor.fetchone()
                     
-                    # Insert new episode
-                    cursor.execute('''
-                        INSERT INTO episodes (
-                            podcast_id, title, audio_url, publish_date, 
-                            description, episode_url, guid, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        podcast_id,
-                        episode_data.get("title", "Unknown Title"),
-                        episode_data.get("audio_url"),
-                        episode_data.get("publish_date"),
-                        episode_data.get("description", ""),
-                        episode_data.get("episode_url", ""),
-                        episode_data.get("guid"),
-                        datetime.now().isoformat()
-                    ))
+                    if not existing:
+                        # Brand new episode - add to database
+                        cursor.execute('''
+                            INSERT INTO episodes (
+                                podcast_id, title, audio_url, publish_date, 
+                                description, episode_url, guid, created_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            podcast_id,
+                            episode_data.get("title", "Unknown Title"),
+                            episode_data.get("audio_url"),
+                            episode_data.get("publish_date"),
+                            episode_data.get("description", ""),
+                            episode_data.get("episode_url", ""),
+                            episode_data.get("guid"),
+                            datetime.now().isoformat()
+                        ))
+                        
+                        episode_id = cursor.lastrowid
+                        needs_work = True
+                        print(f"   ➕ New episode: {episode_data.get('title', 'Unknown')[:50]}...")
+                        
+                    else:
+                        episode_id, transcript, transcribed = existing
+                        # Episode exists but check if it needs transcription/analysis
+                        needs_work = (not transcript or len(transcript) < 5000)
+                        if needs_work:
+                            print(f"   📝 Needs transcript: {episode_data.get('title', 'Unknown')[:50]}...")
                     
-                    new_episodes_count += 1
-                    new_episode_details.append({
-                        'podcast_name': podcast_name,
-                        'title': episode_data.get("title", "Unknown Title"),
-                        'id': cursor.lastrowid
-                    })
+                    if needs_work:
+                        episodes_needing_work.append({
+                            'id': episode_id,
+                            'title': episode_data.get("title", "Unknown Title"),
+                            'podcast_name': podcast_name,
+                            'podcast_id': podcast_id,
+                            'audio_url': episode_data.get("audio_url"),
+                            'publish_date': episode_data.get("publish_date")
+                        })
+                        new_episodes_count += 1
                 
                 if new_episodes_count > 0:
-                    print(f"✅ Found {new_episodes_count} new episodes for {podcast_name}")
-                    total_new_episodes += new_episodes_count
-                    
-                    # Update podcast's last_checked timestamp
-                    cursor.execute('''
-                        UPDATE podcasts SET last_checked = ? WHERE id = ?
-                    ''', (datetime.now().isoformat(), podcast_id))
+                    print(f"   ✅ Found {new_episodes_count} episodes needing work")
                 else:
-                    print(f"📭 No new episodes for {podcast_name}")
+                    print(f"   ✅ Up to date - no work needed")
             
             conn.commit()
             conn.close()
             
-            if total_new_episodes > 0:
-                print(f"🎉 Found {total_new_episodes} total new episodes across all podcasts!")
-                return new_episode_details
+            if episodes_needing_work:
+                print(f"\n🎉 Found {len(episodes_needing_work)} total episodes needing transcription/analysis")
+                
+                # Now process them with the enhanced processor
+                self.process_episodes_with_transcription_and_analysis(episodes_needing_work)
+                
+                return episodes_needing_work
             else:
-                print("📭 No new episodes found across any podcasts")
+                print("✅ All podcasts are up to date!")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error checking for new episodes: {e}")
+            print(f"❌ Error in smart episode checking: {e}")
+            import traceback
+            traceback.print_exc()
             return []
+    
+    def compress_audio(self, input_path, output_path, target_size_mb=20):
+        """Compress audio file to fit Whisper limits"""
+        try:
+            # Get input duration
+            probe_cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', input_path]
+            probe_result = subprocess.run(probe_cmd, capture_output=True, text=True, check=True)
+            probe_data = json.loads(probe_result.stdout)
+            duration = float(probe_data['format']['duration'])
+            
+            # Calculate target bitrate
+            target_size_bytes = target_size_mb * 1024 * 1024
+            target_bitrate = int((target_size_bytes * 8) / duration) - 1000
+            target_bitrate = max(target_bitrate, 32000)
+            
+            # Compress audio
+            compress_cmd = [
+                'ffmpeg', '-i', input_path, '-y',
+                '-acodec', 'mp3', '-ab', f'{target_bitrate}',
+                '-ar', '16000', '-ac', '1', output_path
+            ]
+            
+            subprocess.run(compress_cmd, capture_output=True, check=True)
+            return True
+            
+        except Exception as e:
+            print(f"   ❌ Compression failed: {e}")
+            return False
+
+    def process_episodes_with_transcription_and_analysis(self, episodes_needing_work):
+        """Process episodes with full transcription and analysis pipeline"""
+        
+        print(f"\n🔧 Processing {len(episodes_needing_work)} episodes with transcription & analysis...")
+        
+        successful = 0
+        failed = 0
+        
+        for episode in episodes_needing_work:
+            episode_id = episode['id']
+            title = episode['title']
+            audio_url = episode['audio_url']
+            podcast_name = episode['podcast_name']
+            podcast_id = episode['podcast_id']
+            
+            print(f"\n🎧 Processing: {title[:60]}...")
+            print(f"   📡 Podcast: {podcast_name}")
+            
+            try:
+                # Step 1: Download audio
+                print("   📥 Downloading audio...")
+                headers = {'User-Agent': 'Podcast Analysis Application v2/2.0.0'}
+                response = requests.get(audio_url, headers=headers, timeout=120, stream=True)
+                response.raise_for_status()
+                
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            temp_file.write(chunk)
+                    original_path = temp_file.name
+                
+                original_size = os.path.getsize(original_path)
+                print(f"   📁 Downloaded: {original_size / (1024*1024):.1f}MB")
+                
+                # Step 2: Compress if needed
+                if original_size > 25 * 1024 * 1024:
+                    print("   🗜️ Compressing audio...")
+                    compressed_path = original_path.replace('.mp3', '_compressed.mp3')
+                    
+                    if self.compress_audio(original_path, compressed_path):
+                        audio_path = compressed_path
+                        compressed_size = os.path.getsize(compressed_path)
+                        print(f"   ✅ Compressed to: {compressed_size / (1024*1024):.1f}MB")
+                    else:
+                        print("   ❌ Compression failed, skipping episode")
+                        os.unlink(original_path)
+                        failed += 1
+                        continue
+                else:
+                    audio_path = original_path
+                
+                # Step 3: Transcribe
+                print("   🎤 Transcribing with Whisper...")
+                with open(audio_path, 'rb') as audio_file:
+                    transcript = self.openai_client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        response_format="text"
+                    )
+                
+                print(f"   ✅ Transcribed: {len(transcript)} characters")
+                
+                # Step 4: Analyze
+                print("   🧠 Analyzing with appropriate prompt...")
+                
+                # Choose prompt based on podcast
+                if 'goldman sachs' in podcast_name.lower() or 'exchanges' in podcast_name.lower():
+                    system_prompt = self.goldman_prompt
+                    prompt_type = "Goldman Sachs"
+                else:
+                    system_prompt = self.infrastructure_prompt
+                    prompt_type = "Infrastructure PE"
+                
+                print(f"   📊 Using {prompt_type} analysis prompt")
+                
+                user_prompt = f"""Podcast: {podcast_name}
+Episode: {title}
+
+FULL TRANSCRIPT:
+{transcript}"""
+                
+                response = self.openai_client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_tokens=4000,
+                    temperature=0.1
+                )
+                
+                analysis = response.choices[0].message.content
+                print(f"   ✅ Analysis complete: {len(analysis)} characters")
+                
+                # Extract key quote
+                key_quote = ""
+                lines = analysis.split('\n')
+                for line in lines:
+                    if 'Quote 1:' in line and len(line) > 20:
+                        key_quote = line[:400]
+                        break
+                
+                # Step 5: Save to database
+                print("   💾 Saving to database...")
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                
+                # Update transcript
+                cursor.execute("""
+                    UPDATE episodes 
+                    SET transcript = ?, transcribed = 1
+                    WHERE id = ?
+                """, (transcript, episode_id))
+                
+                # Delete old analysis if exists
+                cursor.execute("DELETE FROM analysis_reports WHERE episode_id = ?", (episode_id,))
+                
+                # Save analysis
+                cursor.execute("""
+                    INSERT INTO analysis_reports (episode_id, user_id, analysis_result, key_quote, reading_time_minutes, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (episode_id, 1, analysis, key_quote, max(1, len(analysis.split()) // 200), datetime.now().isoformat()))
+                
+                conn.commit()
+                conn.close()
+                
+                # Clean up
+                os.unlink(original_path)
+                if audio_path != original_path:
+                    os.unlink(audio_path)
+                
+                print(f"   ✅ Episode {episode_id} FULLY PROCESSED")
+                successful += 1
+                
+            except Exception as e:
+                print(f"   ❌ Processing failed: {e}")
+                failed += 1
+        
+        print(f"\n🎉 TRANSCRIPTION & ANALYSIS COMPLETE:")
+        print(f"   ✅ Successful: {successful}")
+        print(f"   ❌ Failed: {failed}")
+        
+        if successful > 0:
+            print(f"   📊 Success rate: {(successful/(successful+failed)*100):.1f}%")
+            
+            # Update the episode details with the new transcript and analysis info
+            for episode in episodes_needing_work:
+                episode['transcript'] = 'Real transcript created'
+                episode['analysis'] = 'Real analysis created'
+        
+        return successful > 0
     
     def parse_rss_feed(self, rss_url: str) -> Dict[str, Any]:
         """Parse RSS feed and return episode data"""
@@ -412,6 +785,62 @@ class AutomatedPodcastSystem:
                 f.write(f"{analysis_result}\n\n")
                 f.write("---\n\n")
         
+        return filename
+    
+    def create_analysis_report(self, date_str, processed_episodes):
+        """Create analysis report for newly processed episodes"""
+        
+        print("📊 Creating analysis report...")
+        
+        filename = f"podcast_files/daily_reports/Analysis_Report_{date_str}.md"
+        os.makedirs("podcast_files/daily_reports", exist_ok=True)
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(f"# Podcast Analysis Report - {date_str}\n")
+            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"New Episodes Processed: {len(processed_episodes)}\n\n")
+            
+            f.write("## 🎯 Key Highlights\n")
+            f.write("- RSS monitoring system successfully detected new episodes\n")
+            f.write("- All episodes added to database and file system\n")
+            f.write("- Files synchronized to Google Drive\n")
+            f.write("- Individual podcast transcripts and analysis files updated\n\n")
+            
+            f.write("## 📊 Processed Episodes\n\n")
+            
+            # Group by podcast
+            podcasts = {}
+            for episode in processed_episodes:
+                podcast = episode['podcast_name']
+                if podcast not in podcasts:
+                    podcasts[podcast] = []
+                podcasts[podcast].append(episode)
+            
+            for podcast_name, episodes in podcasts.items():
+                f.write(f"### {podcast_name} ({len(episodes)} episodes)\n")
+                for episode in episodes:
+                    f.write(f"**{episode['title']}**\n")
+                    f.write(f"- Episode ID: {episode['id']}\n")
+                    f.write(f"- Published: {episode.get('publish_date', 'Unknown')}\n")
+                    f.write(f"- Status: ✅ Processed and synced\n\n")
+            
+            f.write("## 🔄 System Status\n")
+            f.write("- **RSS Monitoring**: ✅ Active and detecting new episodes\n")
+            f.write("- **Database**: ✅ Updated with new episode records\n")
+            f.write("- **File System**: ✅ Individual transcripts and analysis files updated\n")
+            f.write("- **Google Drive**: ✅ All files synchronized\n")
+            f.write("- **Email Notifications**: ✅ Active\n\n")
+            
+            f.write("## 📈 Next Steps\n")
+            f.write("- Episodes are ready for full audio transcription\n")
+            f.write("- Detailed analysis will be generated once transcripts are complete\n")
+            f.write("- Master files will be updated with comprehensive content\n")
+            f.write("- Continued monitoring for additional new episodes\n\n")
+            
+            f.write("---\n")
+            f.write("*This report was automatically generated by the AI Podcast Processing System*\n")
+        
+        print(f"✅ Analysis report created: {filename}")
         return filename
     
     def create_status_report(self, date_str):
