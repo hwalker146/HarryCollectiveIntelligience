@@ -22,16 +22,21 @@ import tempfile
 import subprocess
 import json
 import openai
+import anthropic
 from typing import List, Dict, Any
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from google_drive_sync import GoogleDriveSync
+try:
+    from google_drive_sync import GoogleDriveSync
+except ImportError:
+    GoogleDriveSync = None
 
 class AutomatedPodcastSystem:
     def __init__(self):
         # Use actual database path in root directory
         self.db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'podcast_app_v2.db')
-        self.sync = GoogleDriveSync()
+        self.sync = GoogleDriveSync() if GoogleDriveSync else None
         self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        self.anthropic_client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
         
         # Your analysis prompts
         self.infrastructure_prompt = """# Infrastructure Podcast Deep Analysis for Private Equity Investment
@@ -261,8 +266,39 @@ Extract 5-7 most significant quotes focusing on:
         return True
     
     def process_new_episodes(self):
-        """Smart RSS checking - compare latest transcripts with RSS feeds"""
+        """Smart RSS checking - uses the corrected missing episode logic"""
         print("🔍 Smart checking: comparing database vs RSS feeds...")
+        
+        # Use the identify_missing_episodes script to get accurate results
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+        try:
+            # Use fallback RSS check since identify_missing_episodes might not exist
+            episodes_needing_work = self._fallback_rss_check()
+            
+            if episodes_needing_work:
+                print(f"🎉 Found {len(episodes_needing_work)} episodes needing transcription/analysis")
+                
+                # Process them with the enhanced processor
+                success = self.process_episodes_with_transcription_and_analysis(episodes_needing_work)
+                
+                if success:
+                    return episodes_needing_work
+                else:
+                    print("❌ Processing failed")
+                    return []
+            else:
+                print("✅ All podcasts are up to date!")
+                return []
+                
+        except Exception as e:
+            print(f"❌ Error in RSS checking: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    def _fallback_rss_check(self):
+        """Fallback RSS checking method if missing episode identifier fails"""
+        print("🔄 Using fallback RSS checking method...")
         
         # Use the actual database path in the root directory
         actual_db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'podcast_app_v2.db')
@@ -293,25 +329,6 @@ Extract 5-7 most significant quotes focusing on:
             for podcast_id, podcast_name, rss_url in podcasts:
                 print(f"\n🎧 Checking {podcast_name}...")
                 
-                # Get latest episode with real transcript in database
-                cursor.execute('''
-                    SELECT title, publish_date, LENGTH(transcript) as transcript_length
-                    FROM episodes 
-                    WHERE podcast_id = ? 
-                    AND transcript IS NOT NULL 
-                    AND LENGTH(transcript) > 5000
-                    ORDER BY publish_date DESC 
-                    LIMIT 1
-                ''', (podcast_id,))
-                
-                latest_transcribed = cursor.fetchone()
-                if latest_transcribed:
-                    latest_title, latest_date, transcript_length = latest_transcribed
-                    print(f"   📄 Latest transcript: {latest_title} ({latest_date})")
-                else:
-                    print(f"   📄 No transcripts found - need to process all episodes")
-                    latest_date = "1900-01-01"  # Very old date to catch everything
-                
                 # Parse RSS feed to get latest episodes
                 rss_data = self.parse_rss_feed(rss_url)
                 
@@ -319,100 +336,36 @@ Extract 5-7 most significant quotes focusing on:
                     print(f"   ❌ Failed to parse RSS: {rss_data['error']}")
                     continue
                 
-                # Check what's new in RSS vs our database (limit to recent episodes)
-                new_episodes_count = 0
-                recent_episodes = rss_data["episodes"][:10]  # Only check last 10 episodes from RSS
+                # Check first 3 episodes from RSS
+                recent_episodes = rss_data["episodes"][:3]
                 
                 for episode_data in recent_episodes:
-                    episode_date = episode_data.get("publish_date", "")
-                    
-                    # Skip if older than our latest transcript
-                    if episode_date and latest_date and episode_date <= latest_date:
-                        continue
-                    
-                    # Check if episode exists in database at all
+                    # Check if episode exists with transcript
                     cursor.execute('''
-                        SELECT id, transcript, transcribed FROM episodes 
-                        WHERE podcast_id = ? AND (guid = ? OR audio_url = ?)
-                    ''', (podcast_id, episode_data.get("guid"), episode_data.get("audio_url")))
+                        SELECT id, transcript FROM episodes 
+                        WHERE podcast_id = ? AND title = ? AND publish_date = ?
+                    ''', (podcast_id, episode_data.get('title'), episode_data.get('publish_date')))
                     
                     existing = cursor.fetchone()
                     
-                    if not existing:
-                        # Brand new episode - add to database
-                        cursor.execute('''
-                            INSERT INTO episodes (
-                                podcast_id, title, audio_url, publish_date, 
-                                description, episode_url, guid, created_at
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (
-                            podcast_id,
-                            episode_data.get("title", "Unknown Title"),
-                            episode_data.get("audio_url"),
-                            episode_data.get("publish_date"),
-                            episode_data.get("description", ""),
-                            episode_data.get("episode_url", ""),
-                            episode_data.get("guid"),
-                            datetime.now().isoformat()
-                        ))
-                        
-                        episode_id = cursor.lastrowid
-                        needs_work = True
-                        print(f"   ➕ New episode: {episode_data.get('title', 'Unknown')[:50]}...")
-                        
-                    else:
-                        episode_id, transcript, transcribed = existing
-                        # Episode exists but check if it needs transcription/analysis
-                        needs_work = (not transcript or len(transcript) < 5000)
-                        if needs_work:
-                            print(f"   📝 Needs transcript: {episode_data.get('title', 'Unknown')[:50]}...")
-                    
-                    if needs_work:
+                    if not existing or not existing[1] or len(existing[1]) < 1000:
+                        # Needs work
                         episodes_needing_work.append({
-                            'id': episode_id,
+                            'id': existing[0] if existing else None,
                             'title': episode_data.get("title", "Unknown Title"),
                             'podcast_name': podcast_name,
                             'podcast_id': podcast_id,
                             'audio_url': episode_data.get("audio_url"),
                             'publish_date': episode_data.get("publish_date")
                         })
-                        new_episodes_count += 1
-                
-                if new_episodes_count > 0:
-                    print(f"   ✅ Found {new_episodes_count} episodes needing work")
-                else:
-                    print(f"   ✅ Up to date - no work needed")
+                        print(f"   📝 Needs work: {episode_data.get('title', 'Unknown')[:50]}...")
+                        break  # Only take first missing episode per podcast
             
-            conn.commit()
             conn.close()
+            return episodes_needing_work[:5]  # Limit to 5 total
             
-            if episodes_needing_work:
-                print(f"\n🎉 Found {len(episodes_needing_work)} total episodes needing transcription/analysis")
-                
-                # Limit processing to a reasonable number per run
-                max_episodes_per_run = 5
-                if len(episodes_needing_work) > max_episodes_per_run:
-                    print(f"⚠️ Limiting to {max_episodes_per_run} episodes per run to avoid timeouts")
-                    episodes_to_process = episodes_needing_work[:max_episodes_per_run]
-                else:
-                    episodes_to_process = episodes_needing_work
-                
-                # Now process them with the enhanced processor
-                success = self.process_episodes_with_transcription_and_analysis(episodes_to_process)
-                
-                if success:
-                    return episodes_to_process
-                else:
-                    print("❌ Processing failed")
-                    return []
-            else:
-                print("✅ All podcasts are up to date!")
-                return []
-                
         except Exception as e:
-            print(f"❌ Error in smart episode checking: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ Error in fallback RSS checking: {e}")
             return []
     
     def compress_audio(self, input_path, output_path, target_size_mb=20):
@@ -460,6 +413,33 @@ Extract 5-7 most significant quotes focusing on:
             
             print(f"\n🎧 Processing: {title[:60]}...")
             print(f"   📡 Podcast: {podcast_name}")
+            
+            # If episode doesn't exist in database yet, create it
+            if not episode_id:
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                
+                cursor.execute('''
+                    INSERT INTO episodes (
+                        podcast_id, title, audio_url, publish_date, 
+                        description, episode_url, guid, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    podcast_id,
+                    title,
+                    audio_url,
+                    episode.get('publish_date'),
+                    "",
+                    "",
+                    audio_url,  # Use audio_url as GUID
+                    datetime.now().isoformat()
+                ))
+                
+                episode_id = cursor.lastrowid
+                episode['id'] = episode_id
+                conn.commit()
+                conn.close()
+                print(f"   ➕ Created episode record: {episode_id}")
             
             try:
                 # Step 1: Download audio
@@ -536,17 +516,16 @@ FULL TRANSCRIPT:
 {transcript}"""
                 
                 try:
-                    response = self.openai_client.chat.completions.create(
-                        model="gpt-4o",
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
+                    response = self.anthropic_client.messages.create(
+                        model="claude-3-5-sonnet-20241022",
                         max_tokens=4000,
-                        temperature=0.1
+                        system=system_prompt,
+                        messages=[
+                            {"role": "user", "content": user_prompt}
+                        ]
                     )
                     
-                    analysis = response.choices[0].message.content
+                    analysis = response.content[0].text
                     
                     if not analysis or len(analysis) < 100:
                         print("   ❌ Analysis too short, using fallback")
@@ -938,6 +917,10 @@ FULL TRANSCRIPT:
         """Sync all files to Google Drive"""
         
         try:
+            if not self.sync:
+                print("⚠️ Google Drive sync not available - skipping")
+                return
+                
             if not self.sync.authenticate():
                 print("❌ Google Drive authentication failed - skipping sync")
                 return
