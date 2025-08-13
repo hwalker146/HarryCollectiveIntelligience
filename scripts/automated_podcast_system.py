@@ -28,7 +28,8 @@ from google_drive_sync import GoogleDriveSync
 
 class AutomatedPodcastSystem:
     def __init__(self):
-        self.db_path = 'podcast_app_v2.db'
+        # Use actual database path in root directory
+        self.db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'podcast_app_v2.db')
         self.sync = GoogleDriveSync()
         self.openai_client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
         
@@ -263,9 +264,13 @@ Extract 5-7 most significant quotes focusing on:
         """Smart RSS checking - compare latest transcripts with RSS feeds"""
         print("🔍 Smart checking: comparing database vs RSS feeds...")
         
-        if not os.path.exists(self.db_path):
-            print(f"❌ Database not found: {self.db_path}")
+        # Use the actual database path in the root directory
+        actual_db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'podcast_app_v2.db')
+        if not os.path.exists(actual_db_path):
+            print(f"❌ Database not found: {actual_db_path}")
             return []
+        
+        self.db_path = actual_db_path  # Update the path
             
         try:
             conn = sqlite3.connect(self.db_path)
@@ -314,9 +319,11 @@ Extract 5-7 most significant quotes focusing on:
                     print(f"   ❌ Failed to parse RSS: {rss_data['error']}")
                     continue
                 
-                # Check what's new in RSS vs our database
+                # Check what's new in RSS vs our database (limit to recent episodes)
                 new_episodes_count = 0
-                for episode_data in rss_data["episodes"]:
+                recent_episodes = rss_data["episodes"][:10]  # Only check last 10 episodes from RSS
+                
+                for episode_data in recent_episodes:
                     episode_date = episode_data.get("publish_date", "")
                     
                     # Skip if older than our latest transcript
@@ -382,10 +389,22 @@ Extract 5-7 most significant quotes focusing on:
             if episodes_needing_work:
                 print(f"\n🎉 Found {len(episodes_needing_work)} total episodes needing transcription/analysis")
                 
-                # Now process them with the enhanced processor
-                self.process_episodes_with_transcription_and_analysis(episodes_needing_work)
+                # Limit processing to a reasonable number per run
+                max_episodes_per_run = 5
+                if len(episodes_needing_work) > max_episodes_per_run:
+                    print(f"⚠️ Limiting to {max_episodes_per_run} episodes per run to avoid timeouts")
+                    episodes_to_process = episodes_needing_work[:max_episodes_per_run]
+                else:
+                    episodes_to_process = episodes_needing_work
                 
-                return episodes_needing_work
+                # Now process them with the enhanced processor
+                success = self.process_episodes_with_transcription_and_analysis(episodes_to_process)
+                
+                if success:
+                    return episodes_to_process
+                else:
+                    print("❌ Processing failed")
+                    return []
             else:
                 print("✅ All podcasts are up to date!")
                 return []
@@ -475,16 +494,27 @@ Extract 5-7 most significant quotes focusing on:
                 else:
                     audio_path = original_path
                 
-                # Step 3: Transcribe
+                # Step 3: Transcribe with timeout handling
                 print("   🎤 Transcribing with Whisper...")
-                with open(audio_path, 'rb') as audio_file:
-                    transcript = self.openai_client.audio.transcriptions.create(
-                        model="whisper-1",
-                        file=audio_file,
-                        response_format="text"
-                    )
-                
-                print(f"   ✅ Transcribed: {len(transcript)} characters")
+                try:
+                    with open(audio_path, 'rb') as audio_file:
+                        transcript = self.openai_client.audio.transcriptions.create(
+                            model="whisper-1",
+                            file=audio_file,
+                            response_format="text"
+                        )
+                    
+                    if not transcript or len(transcript) < 100:
+                        print("   ❌ Transcription too short, skipping")
+                        failed += 1
+                        continue
+                        
+                    print(f"   ✅ Transcribed: {len(transcript)} characters")
+                    
+                except Exception as e:
+                    print(f"   ❌ Transcription failed: {e}")
+                    failed += 1
+                    continue
                 
                 # Step 4: Analyze
                 print("   🧠 Analyzing with appropriate prompt...")
@@ -505,18 +535,28 @@ Episode: {title}
 FULL TRANSCRIPT:
 {transcript}"""
                 
-                response = self.openai_client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    max_tokens=4000,
-                    temperature=0.1
-                )
-                
-                analysis = response.choices[0].message.content
-                print(f"   ✅ Analysis complete: {len(analysis)} characters")
+                try:
+                    response = self.openai_client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        max_tokens=4000,
+                        temperature=0.1
+                    )
+                    
+                    analysis = response.choices[0].message.content
+                    
+                    if not analysis or len(analysis) < 100:
+                        print("   ❌ Analysis too short, using fallback")
+                        analysis = f"Analysis for {title} - Episode from {podcast_name}"
+                    
+                    print(f"   ✅ Analysis complete: {len(analysis)} characters")
+                    
+                except Exception as e:
+                    print(f"   ❌ Analysis failed: {e}, using fallback")
+                    analysis = f"Analysis failed for {title} - Episode from {podcast_name}. Error: {str(e)[:100]}"
                 
                 # Extract key quote
                 key_quote = ""
