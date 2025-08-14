@@ -47,13 +47,14 @@ jobs:
           if_no_artifact_found: ignore
 
       - name: Run daily podcast automation
+        timeout-minutes: 60
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: |
-          python scripts/unified_podcast_automation.py
+          python unified_podcast_automation.py
 
       - name: Upload updated database
         uses: actions/upload-artifact@v4
