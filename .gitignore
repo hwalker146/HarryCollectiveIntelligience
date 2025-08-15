@@ -61,11 +61,8 @@ Thumbs.db
 # Large backup files (keep one copy in master_files/)
 COMPLETE_MASTER_*.md
 
-# Large master files (>100MB GitHub limit)
-content/master_transcripts/*_Master_Transcripts.md
-!content/master_transcripts/WSJ_Whats_News_Master_Transcripts.md
-!content/master_transcripts/The_Intelligence_Master_Transcripts.md
-!content/master_transcripts/The_Ezra_Klein_Show_Master_Transcripts.md
+# Allow all master transcript files
+# Removed size restrictions - all master files should be in GitHub
 
 # RSS Intelligence processed data
 rss_intelligence/processed_articles.json
