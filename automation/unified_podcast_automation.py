@@ -24,8 +24,10 @@ from typing import List, Dict, Any
 
 class EnhancedPodcastSystem:
     def __init__(self):
-        self.db_path = '../podcast_app_v2.db'
-        self.master_dir = Path('../content/master_transcripts_organized')
+        # Use absolute paths to avoid working directory issues
+        base_dir = Path(__file__).parent.parent
+        self.db_path = str(base_dir / 'podcast_app_v2.db')
+        self.master_dir = base_dir / 'content/master_transcripts_organized'
         self.reports_dir = Path('content/reports/daily')
         
         # Create directories
@@ -510,7 +512,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                                 # No date available - treat as new if database has episodes
                                 is_new = episode_count == 0
                             
-                            if (is_gap or is_new) and new_episodes_for_podcast < 3:
+                            if (is_gap or is_new):
                                 episode_data = {
                                     'podcast_id': podcast_id,
                                     'podcast_name': podcast_name,
@@ -537,8 +539,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                             
                             existing_episode = cursor.fetchone()
                             if (existing_episode and 
-                                (existing_episode[1] == 0 or not existing_episode[2] or len(existing_episode[2].strip()) < 100) and
-                                new_episodes_for_podcast < 3):
+                                (existing_episode[1] == 0 or not existing_episode[2] or len(existing_episode[2].strip()) < 100)):
                                 
                                 episode_data = {
                                     'podcast_id': podcast_id,
@@ -555,10 +556,6 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                                 new_episodes_for_podcast += 1
                                 print(f"   🔄 RETRANSCRIBE: {episode_title[:50]}...")
                         
-                        if new_episodes_for_podcast >= 3:
-                            print(f"   ⏸️  Reached limit (3 episodes per podcast)")
-                            break
-                        
                 except Exception as e:
                     print(f"   ❌ RSS error: {e}")
                     continue
@@ -570,7 +567,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             else:
                 print(f"\n📭 No new episodes found")
                 
-            return new_episodes[:5]  # Limit to 5 per run
+            return new_episodes  # Process ALL detected episodes
             
         except Exception as e:
             print(f"❌ RSS checking failed: {e}")
