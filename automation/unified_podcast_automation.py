@@ -24,8 +24,8 @@ from typing import List, Dict, Any
 
 class EnhancedPodcastSystem:
     def __init__(self):
-        self.db_path = 'podcast_app_v2.db'
-        self.master_dir = Path('content/master_transcripts')
+        self.db_path = '../podcast_app_v2.db'
+        self.master_dir = Path('../content/master_transcripts_organized')
         self.reports_dir = Path('content/reports/daily')
         
         # Create directories
@@ -38,19 +38,19 @@ class EnhancedPodcastSystem:
         
         # Podcast name to file mapping
         self.podcast_files = {
-            'Exchanges at Goldman Sachs': 'Exchanges_at_Goldman_Sachs_Master_Transcripts.md',
-            'The Infrastructure Investor': 'The_Infrastructure_Investor_Master_Transcripts.md',
-            'The Data Center Frontier Show': 'The_Data_Center_Frontier_Show_Master_Transcripts.md',
-            'Crossroads: The Infrastructure Podcast': 'Crossroads_The_Infrastructure_Podcast_Master_Transcripts.md',
-            'Deal Talks': 'Deal_Talks_Master_Transcripts.md',
-            'Global Evolution': 'Global_Evolution_Master_Transcripts.md',
-            'WSJ What\'s News': 'WSJ_Whats_News_Master_Transcripts.md',
-            'The Intelligence': 'The_Intelligence_Master_Transcripts.md',
-            'The Ezra Klein Show': 'The_Ezra_Klein_Show_Master_Transcripts.md',
-            'Optimistic Outlook': 'Optimistic_Outlook_Master_Transcripts.md',
-            'The Engineers Collective': 'The_Engineers_Collective_Master_Transcripts.md',
-            'Talking Infrastructure': 'Talking_Infrastructure_Master_Transcripts.md',
-            'a16z Podcast': 'a16z_Podcast_Master_Transcripts.md'
+            'Exchanges at Goldman Sachs': 'Exchanges_at_Goldman_Sachs_Master_Transcripts_Organized.md',
+            'The Infrastructure Investor': 'The_Infrastructure_Investor_Master_Transcripts_Organized.md',
+            'The Data Center Frontier Show': 'The_Data_Center_Frontier_Show_Master_Transcripts_Organized.md',
+            'Crossroads: The Infrastructure Podcast': 'Crossroads_The_Infrastructure_Podcast_Master_Transcripts_Organized.md',
+            'Deal Talks': 'Deal_Talks_Master_Transcripts_Organized.md',
+            'Global Evolution': 'Global_Evolution_Master_Transcripts_Organized.md',
+            'WSJ What\'s News': 'WSJ_Whats_News_Master_Transcripts_Organized.md',
+            'The Intelligence': 'The_Intelligence_Master_Transcripts_Organized.md',
+            'The Ezra Klein Show': 'The_Ezra_Klein_Show_Master_Transcripts_Organized.md',
+            'Optimistic Outlook': 'Optimistic_Outlook_Master_Transcripts_Organized.md',
+            'The Engineers Collective': 'The_Engineers_Collective_Master_Transcripts_Organized.md',
+            'Talking Infrastructure': 'Talking_Infrastructure_Master_Transcripts_Organized.md',
+            'a16z Podcast': 'a16z_Podcast_Master_Transcripts_Organized.md'
         }
         
         # Analysis prompts
@@ -401,6 +401,29 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             for podcast_id, podcast_name, rss_url in podcasts:
                 print(f"\n🎧 {podcast_name}...")
                 
+                # Get date range for this podcast to detect gaps
+                cursor.execute('''
+                    SELECT MIN(publish_date), MAX(publish_date), COUNT(*) 
+                    FROM episodes 
+                    WHERE podcast_id = ? AND publish_date IS NOT NULL
+                ''', (podcast_id,))
+                
+                date_info = cursor.fetchone()
+                oldest_date, newest_date, episode_count = date_info
+                
+                # Get existing episode GUIDs to check for duplicates
+                cursor.execute('''
+                    SELECT guid, audio_url, title FROM episodes 
+                    WHERE podcast_id = ?
+                ''', (podcast_id,))
+                existing_episodes = {
+                    (row[0] or row[1] or row[2]): True 
+                    for row in cursor.fetchall()
+                }
+                
+                print(f"   📊 Database: {episode_count} episodes, oldest: {oldest_date}, newest: {newest_date}")
+                print(f"   🔍 Checking for gaps and new episodes...")
+                
                 # Parse RSS feed
                 try:
                     headers = {'User-Agent': 'Podcast Analysis Application v2/2.0.0'}
@@ -413,8 +436,30 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         print(f"   ❌ Invalid RSS feed")
                         continue
                     
-                    # Check latest 3 episodes
-                    for entry in feed.entries[:3]:
+                    # Check all RSS episodes for gaps and new episodes
+                    episodes_checked = 0
+                    new_episodes_for_podcast = 0
+                    missing_episodes = []
+                    
+                    # Parse oldest/newest dates from database for comparison
+                    oldest_db_date = None
+                    newest_db_date = None
+                    if oldest_date:
+                        try:
+                            oldest_db_date = datetime.fromisoformat(oldest_date.replace('Z', '+00:00'))
+                        except:
+                            oldest_db_date = None
+                    if newest_date:
+                        try:
+                            newest_db_date = datetime.fromisoformat(newest_date.replace('Z', '+00:00'))
+                        except:
+                            newest_db_date = None
+                    
+                    for entry in feed.entries:  # Check ALL episodes to find gaps
+                        episodes_checked += 1
+                        if episodes_checked > 50:  # Reasonable limit to prevent excessive processing
+                            break
+                            
                         # Extract audio URL
                         audio_url = None
                         for enclosure in getattr(entry, 'enclosures', []):
@@ -427,32 +472,92 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         
                         # Parse publication date
                         publish_date = None
+                        episode_date = None
                         if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                            publish_date = datetime(*entry.published_parsed[:6]).isoformat()
+                            episode_date = datetime(*entry.published_parsed[:6])
+                            publish_date = episode_date.isoformat()
                         
                         episode_title = getattr(entry, 'title', 'Unknown Title')
+                        episode_guid = getattr(entry, 'id', None) or audio_url
                         
-                        # Check if episode exists in database
-                        cursor.execute('''
-                            SELECT id FROM episodes 
-                            WHERE podcast_id = ? AND (guid = ? OR audio_url = ? OR title = ?)
-                        ''', (podcast_id, getattr(entry, 'id', audio_url), audio_url, episode_title))
+                        # Check if this episode exists in our database
+                        episode_key = episode_guid or audio_url or episode_title
+                        episode_exists = episode_key in existing_episodes
                         
-                        if not cursor.fetchone():
-                            # New episode!
-                            episode_data = {
-                                'podcast_id': podcast_id,
-                                'podcast_name': podcast_name,
-                                'title': episode_title,
-                                'description': getattr(entry, 'summary', ''),
-                                'audio_url': audio_url,
-                                'episode_url': getattr(entry, 'link', ''),
-                                'guid': getattr(entry, 'id', None) or audio_url,
-                                'publish_date': publish_date
-                            }
-                            new_episodes.append(episode_data)
-                            print(f"   🆕 NEW: {episode_title[:50]}...")
-                            break  # Only take first missing per podcast
+                        # If episode doesn't exist, determine if it's a gap or new episode
+                        if not episode_exists:
+                            is_gap = False
+                            is_new = False
+                            
+                            if episode_date:
+                                # Convert to naive datetime for comparison
+                                episode_naive = episode_date.replace(tzinfo=None) if episode_date.tzinfo else episode_date
+                                oldest_naive = oldest_db_date.replace(tzinfo=None) if oldest_db_date and oldest_db_date.tzinfo else oldest_db_date
+                                newest_naive = newest_db_date.replace(tzinfo=None) if newest_db_date and newest_db_date.tzinfo else newest_db_date
+                                
+                                # Check if episode falls within existing date range (gap) or is newer (new episode)
+                                if oldest_naive and newest_naive:
+                                    if oldest_naive <= episode_naive <= newest_naive:
+                                        is_gap = True
+                                    elif episode_naive > newest_naive:
+                                        is_new = True
+                                elif not oldest_naive and not newest_naive:
+                                    # No episodes in database yet - treat as new
+                                    is_new = True
+                                elif episode_naive and newest_naive and episode_naive > newest_naive:
+                                    is_new = True
+                            else:
+                                # No date available - treat as new if database has episodes
+                                is_new = episode_count == 0
+                            
+                            if (is_gap or is_new) and new_episodes_for_podcast < 3:
+                                episode_data = {
+                                    'podcast_id': podcast_id,
+                                    'podcast_name': podcast_name,
+                                    'title': episode_title,
+                                    'description': getattr(entry, 'summary', ''),
+                                    'audio_url': audio_url,
+                                    'episode_url': getattr(entry, 'link', ''),
+                                    'guid': episode_guid,
+                                    'publish_date': publish_date,
+                                    'existing_episode_id': None
+                                }
+                                new_episodes.append(episode_data)
+                                new_episodes_for_podcast += 1
+                                
+                                status = "🕳️ GAP" if is_gap else "🆕 NEW"
+                                print(f"   {status}: {episode_title[:50]}... ({publish_date[:10] if publish_date else 'no date'})")
+                        
+                        # Also check for existing episodes that need transcription
+                        elif episode_exists:
+                            cursor.execute('''
+                                SELECT id, transcribed, transcript FROM episodes 
+                                WHERE podcast_id = ? AND (guid = ? OR audio_url = ? OR title = ?)
+                            ''', (podcast_id, episode_guid, audio_url, episode_title))
+                            
+                            existing_episode = cursor.fetchone()
+                            if (existing_episode and 
+                                (existing_episode[1] == 0 or not existing_episode[2] or len(existing_episode[2].strip()) < 100) and
+                                new_episodes_for_podcast < 3):
+                                
+                                episode_data = {
+                                    'podcast_id': podcast_id,
+                                    'podcast_name': podcast_name,
+                                    'title': episode_title,
+                                    'description': getattr(entry, 'summary', ''),
+                                    'audio_url': audio_url,
+                                    'episode_url': getattr(entry, 'link', ''),
+                                    'guid': episode_guid,
+                                    'publish_date': publish_date,
+                                    'existing_episode_id': existing_episode[0]
+                                }
+                                new_episodes.append(episode_data)
+                                new_episodes_for_podcast += 1
+                                print(f"   🔄 RETRANSCRIBE: {episode_title[:50]}...")
+                        
+                        if new_episodes_for_podcast >= 3:
+                            print(f"   ⏸️  Reached limit (3 episodes per podcast)")
+                            break
                         
                 except Exception as e:
                     print(f"   ❌ RSS error: {e}")
@@ -487,8 +592,11 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                 # Step 2: Analyze
                 analysis = self.analyze_episode(episode, transcript)
                 
-                # Step 3: Add to database
-                episode_id = self.save_to_database(episode, transcript, analysis)
+                # Step 3: Add to database or update existing
+                if episode.get('existing_episode_id'):
+                    episode_id = self.update_existing_episode(episode, transcript, analysis)
+                else:
+                    episode_id = self.save_to_database(episode, transcript, analysis)
                 
                 processed.append({
                     'episode_id': episode_id,
@@ -615,6 +723,36 @@ TRANSCRIPT:
             print(f"   ❌ Analysis failed: {e}")
             return f"Analysis failed: {str(e)}"
     
+    def update_existing_episode(self, episode, transcript, analysis):
+        """Update existing episode with transcript and analysis"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            episode_id = episode['existing_episode_id']
+            
+            # Update episode with transcript
+            cursor.execute('''
+                UPDATE episodes 
+                SET transcript = ?, transcribed = 1, created_at = ?
+                WHERE id = ?
+            ''', (transcript, datetime.now().isoformat(), episode_id))
+            
+            # Save analysis
+            cursor.execute("""
+                INSERT INTO analysis_reports (episode_id, user_id, analysis_result, key_quote, reading_time_minutes, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (episode_id, 1, analysis, "", max(1, len(analysis.split()) // 200), datetime.now().isoformat()))
+            
+            conn.commit()
+            conn.close()
+            
+            return episode_id
+            
+        except Exception as e:
+            print(f"   ❌ Database update failed: {e}")
+            return None
+
     def save_to_database(self, episode, transcript, analysis):
         """Save episode to database"""
         try:
