@@ -1,6 +1,6 @@
 # Global Evolution - Master Transcripts
 
-**Generated:** 2025-08-19 00:33:10
+**Generated:** 2025-08-19 19:16:24
 **Total Episodes:** 23
 
 Episodes organized by publication date (newest first).
