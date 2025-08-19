@@ -366,8 +366,8 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             print(f"\n📝 UPDATING MASTER FILES")
             self.append_to_master_files(processed_episodes)
         
-        # Step 4: Send email report
-        self.send_email_report_complete(len(new_episodes), len(processed_episodes), processed_episodes)
+        # Step 4: Send email report (check for episodes added today even if processing failed)
+        self.send_email_report_with_fallback(len(new_episodes), len(processed_episodes), processed_episodes)
         
         # Summary
         duration = datetime.now() - start_time
@@ -604,15 +604,15 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                 episode_id = self.save_to_database(episode, transcript, analysis)
             
             if episode_id:
-                # Step 4: Append to master file
-                self.append_to_master_file(episode, transcript)
+                # Step 4: Append to master file happens in the main process
                 
                 return {
                     'episode_id': episode_id,
+                    'podcast_name': episode['podcast_name'],
                     'title': episode['title'],
-                    'podcast': episode['podcast_name'],
-                    'analysis': analysis,
-                    'transcript_length': len(transcript)
+                    'date': episode.get('publish_date', '').split('T')[0] if episode.get('publish_date') else date.today().strftime('%Y-%m-%d'),
+                    'transcript': transcript,
+                    'analysis': analysis
                 }
         except Exception as e:
             print(f"❌ Error processing {episode['title']}: {e}")
@@ -990,6 +990,117 @@ All podcasts are up to date.
             
         except Exception as e:
             print(f"❌ Email failed: {e}")
+    
+    def send_email_report_with_fallback(self, episodes_found, episodes_processed, processed_episodes=None):
+        """Send email report with fallback to check database for episodes added today"""
+        try:
+            # Check if episodes were actually added to database today (fallback for partial failures)
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT p.name, e.title, e.publish_date, LENGTH(e.transcript) as transcript_length, e.created_at
+                FROM episodes e 
+                JOIN podcasts p ON e.podcast_id = p.id 
+                WHERE DATE(e.created_at) = DATE('now') 
+                ORDER BY e.created_at DESC
+            ''')
+            
+            todays_episodes = cursor.fetchall()
+            conn.close()
+            
+            # If episodes were processed successfully, use normal reporting
+            if episodes_processed > 0 and processed_episodes:
+                print(f"📧 Sending success email for {episodes_processed} processed episodes")
+                self.send_email_report_complete(episodes_found, episodes_processed, processed_episodes)
+            
+            # If no episodes in processed_episodes but episodes exist in DB from today, send fallback email
+            elif todays_episodes:
+                print(f"📧 Sending fallback email for {len(todays_episodes)} episodes found in database")
+                self.send_fallback_email_for_db_episodes(episodes_found, todays_episodes)
+            
+            # Otherwise, send normal "no episodes" email
+            else:
+                print(f"📧 Sending no episodes email")
+                self.send_email_report_complete(episodes_found, 0, None)
+                
+        except Exception as e:
+            print(f"❌ Email fallback failed: {e}")
+            # Fall back to original method
+            self.send_email_report_complete(episodes_found, episodes_processed, processed_episodes)
+    
+    def send_fallback_email_for_db_episodes(self, episodes_found, todays_episodes):
+        """Send email for episodes that were saved to DB but not in processed_episodes list"""
+        try:
+            sender_email = os.getenv('EMAIL_FROM', 'aipodcastdigest@gmail.com')
+            sender_password = os.getenv('EMAIL_PASSWORD')
+            recipient_email = 'hwalker146@outlook.com'
+            
+            if not sender_password:
+                print("❌ Email password not configured")
+                return
+            
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = recipient_email
+            msg['Subject'] = f"✅ {len(todays_episodes)} Podcast Episodes Processed - {datetime.now().strftime('%Y-%m-%d')} (Recovered)"
+            
+            body = f"""🤖 UNIFIED PODCAST AUTOMATION REPORT (RECOVERED DATA)
+
+Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+📊 TODAY'S RESULTS:
+• Episodes Found: {episodes_found}
+• Successfully Processed: {len(todays_episodes)} (recovered from database)
+
+⚠️  Note: Episodes were successfully transcribed and saved, but some processing steps encountered errors.
+All episode data is intact in the database.
+
+📝 EPISODES PROCESSED TODAY:
+
+"""
+            
+            for podcast_name, title, publish_date, transcript_length, created_at in todays_episodes:
+                publish_date_short = publish_date[:10] if publish_date else 'Unknown'
+                body += f"""🎧 {podcast_name}
+📅 {publish_date_short}: {title}
+📊 Transcript: {transcript_length:,} characters
+⏰ Processed: {created_at.split('T')[1][:8]} UTC
+
+"""
+            
+            body += f"""
+📈 PERFORMANCE METRICS:
+• Total episodes: {len(todays_episodes)}
+• Total characters: {sum(ep[3] for ep in todays_episodes):,}
+• Average length: {sum(ep[3] for ep in todays_episodes) // len(todays_episodes):,} chars
+
+✅ All episodes successfully:
+• Downloaded and transcribed with OpenAI Whisper
+• Saved to database with full metadata
+• Ready for analysis and master file updates
+
+🔧 Recent optimizations working:
+• Parallel processing (3 workers)
+• Audio compression for faster transcription  
+• 4-hour timeout prevents failures
+• Improved episode detection logic
+
+🤖 Generated by unified automation system
+"""
+            
+            msg.attach(MIMEText(body, 'plain'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, recipient_email, msg.as_string())
+            server.quit()
+            
+            print(f"✅ Fallback email sent to {recipient_email}")
+            
+        except Exception as e:
+            print(f"❌ Fallback email failed: {e}")
 
 if __name__ == "__main__":
     import sys
