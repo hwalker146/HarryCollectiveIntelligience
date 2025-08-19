@@ -413,15 +413,21 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                 date_info = cursor.fetchone()
                 oldest_date, newest_date, episode_count = date_info
                 
-                # Get existing episode GUIDs to check for duplicates
+                # Get existing episodes for proper matching
                 cursor.execute('''
                     SELECT guid, audio_url, title FROM episodes 
                     WHERE podcast_id = ?
                 ''', (podcast_id,))
-                existing_episodes = {
-                    (row[0] or row[1] or row[2]): True 
-                    for row in cursor.fetchall()
-                }
+                
+                existing_episodes = set()
+                for guid, audio_url, title in cursor.fetchall():
+                    # Add all possible identifiers for this episode
+                    if guid:
+                        existing_episodes.add(guid)
+                    if audio_url:
+                        existing_episodes.add(audio_url)
+                    if title:
+                        existing_episodes.add(title)
                 
                 print(f"   📊 Database: {episode_count} episodes, oldest: {oldest_date}, newest: {newest_date}")
                 print(f"   🔍 Checking for gaps and new episodes...")
@@ -482,9 +488,12 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         episode_title = getattr(entry, 'title', 'Unknown Title')
                         episode_guid = getattr(entry, 'id', None) or audio_url
                         
-                        # Check if this episode exists in our database
-                        episode_key = episode_guid or audio_url or episode_title
-                        episode_exists = episode_key in existing_episodes
+                        # Check if this episode exists in our database using any identifier
+                        episode_exists = (
+                            (episode_guid and episode_guid in existing_episodes) or
+                            (audio_url and audio_url in existing_episodes) or  
+                            (episode_title and episode_title in existing_episodes)
+                        )
                         
                         # If episode doesn't exist, determine if it's a gap or new episode
                         if not episode_exists:
