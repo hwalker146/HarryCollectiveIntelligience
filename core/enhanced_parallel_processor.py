@@ -529,7 +529,7 @@ Extract the 3 most insightful quotes that capture:
         cursor.execute("""
             UPDATE user_subscriptions 
             SET custom_prompt = ? 
-            WHERE user_id = 2 AND podcast_id = 15
+            WHERE user_id = 2 AND podcast_id = 10
         """, (infrastructure_prompt,))
         
         conn.commit()
@@ -575,8 +575,8 @@ Extract the 3 most insightful quotes that capture:
         # Data Center Frontier - all episodes
         cursor.execute("""
             SELECT id FROM episodes 
-            WHERE podcast_id = 15 
-            ORDER BY pub_date DESC, created_at DESC
+            WHERE podcast_id = 10 
+            ORDER BY publish_date DESC, created_at DESC
         """)
         episodes = [row[0] for row in cursor.fetchall()]
         all_episodes.extend(episodes)
@@ -601,7 +601,7 @@ Extract the 3 most insightful quotes that capture:
             FROM analysis_reports ar
             JOIN episodes e ON ar.episode_id = e.id
             JOIN podcasts p ON e.podcast_id = p.id
-            WHERE p.id IN (3, 6, 7, 8, 14, 15) AND ar.user_id = 2
+            WHERE p.id IN (3, 6, 7, 8, 10, 14) AND ar.user_id = 2
             ORDER BY e.pub_date DESC, p.name
         """)
         
