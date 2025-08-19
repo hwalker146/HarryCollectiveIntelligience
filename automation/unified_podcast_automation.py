@@ -16,11 +16,13 @@ import json
 import openai
 import anthropic
 import re
+import concurrent.futures
 from datetime import datetime, date
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from typing import List, Dict, Any
+from threading import ThreadPoolExecutor
 
 class EnhancedPodcastSystem:
     def __init__(self):
@@ -582,41 +584,64 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             print(f"❌ RSS checking failed: {e}")
             return []
     
+    def process_single_episode(self, episode):
+        """Process a single episode - used for parallel processing"""
+        try:
+            print(f"\n🔧 PROCESSING: {episode['title'][:50]}...")
+            
+            # Step 1: Download and transcribe
+            transcript = self.transcribe_episode(episode)
+            if not transcript:
+                return None
+            
+            # Step 2: Analyze
+            analysis = self.analyze_episode(episode, transcript)
+            
+            # Step 3: Add to database or update existing
+            if episode.get('existing_episode_id'):
+                episode_id = self.update_existing_episode(episode, transcript, analysis)
+            else:
+                episode_id = self.save_to_database(episode, transcript, analysis)
+            
+            if episode_id:
+                # Step 4: Append to master file
+                self.append_to_master_file(episode, transcript)
+                
+                return {
+                    'episode_id': episode_id,
+                    'title': episode['title'],
+                    'podcast': episode['podcast_name'],
+                    'analysis': analysis,
+                    'transcript_length': len(transcript)
+                }
+        except Exception as e:
+            print(f"❌ Error processing {episode['title']}: {e}")
+            return None
+    
     def process_new_episodes(self, episodes):
-        """Process new episodes with transcription and analysis"""
+        """Process new episodes with parallel transcription and analysis"""
         processed = []
         
-        for episode in episodes:
-            try:
-                print(f"\n🔧 PROCESSING: {episode['title'][:50]}...")
-                
-                # Step 1: Download and transcribe
-                transcript = self.transcribe_episode(episode)
-                if not transcript:
-                    continue
-                
-                # Step 2: Analyze
-                analysis = self.analyze_episode(episode, transcript)
-                
-                # Step 3: Add to database or update existing
-                if episode.get('existing_episode_id'):
-                    episode_id = self.update_existing_episode(episode, transcript, analysis)
-                else:
-                    episode_id = self.save_to_database(episode, transcript, analysis)
-                
-                processed.append({
-                    'episode_id': episode_id,
-                    'podcast_name': episode['podcast_name'],
-                    'title': episode['title'],
-                    'date': episode.get('publish_date', '').split('T')[0] if episode.get('publish_date') else date.today().strftime('%Y-%m-%d'),
-                    'transcript': transcript,
-                    'analysis': analysis
-                })
-                
-                print(f"   ✅ Successfully processed episode {episode_id}")
-                
-            except Exception as e:
-                print(f"   ❌ Failed to process: {e}")
+        # Process episodes in parallel with a conservative limit
+        # OpenAI allows 5 requests/minute, so 3 parallel is safe
+        max_workers = min(3, len(episodes))
+        
+        print(f"\n🚀 PARALLEL PROCESSING: {len(episodes)} episodes with {max_workers} workers")
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all episodes for processing
+            future_to_episode = {executor.submit(self.process_single_episode, ep): ep for ep in episodes}
+            
+            # Collect results as they complete
+            for future in concurrent.futures.as_completed(future_to_episode):
+                episode = future_to_episode[future]
+                try:
+                    result = future.result()
+                    if result:
+                        processed.append(result)
+                        print(f"✅ Completed: {result['title'][:50]}")
+                except Exception as e:
+                    print(f"❌ Exception processing {episode['title']}: {e}")
         
         return processed
     
@@ -634,16 +659,14 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         temp_file.write(chunk)
                 audio_path = temp_file.name
             
-            # Check file size and compress if needed
-            file_size = os.path.getsize(audio_path)
-            if file_size > 25 * 1024 * 1024:  # 25MB limit
-                print("   🗜️ Compressing audio...")
-                compressed_path = self.compress_audio(audio_path)
-                if compressed_path:
-                    audio_path = compressed_path
-                else:
-                    os.unlink(audio_path)
-                    return None
+            # Always compress audio for faster transcription
+            print("   🗜️ Compressing audio for optimal transcription...")
+            compressed_path = self.compress_audio(audio_path)
+            if compressed_path:
+                audio_path = compressed_path
+            else:
+                print("   ⚠️ Compression failed, using original file")
+                # Continue with original file rather than failing
             
             # Transcribe
             print("   🎤 Transcribing...")
@@ -668,29 +691,35 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             return None
     
     def compress_audio(self, input_path):
-        """Compress audio file using ffmpeg"""
+        """Compress audio file for optimal transcription speed"""
         try:
             output_path = input_path.replace('.mp3', '_compressed.mp3')
             
-            # Get duration first
-            probe_cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', input_path]
-            probe_result = subprocess.run(probe_cmd, capture_output=True, text=True, check=True)
-            probe_data = json.loads(probe_result.stdout)
-            duration = float(probe_data['format']['duration'])
-            
-            # Calculate bitrate for ~20MB target
-            target_size_bytes = 20 * 1024 * 1024
-            target_bitrate = int((target_size_bytes * 8) / duration) - 1000
-            target_bitrate = max(target_bitrate, 32000)
-            
-            # Compress
+            # Aggressive compression for speed:
+            # - 16kHz sample rate (Whisper minimum)
+            # - Mono (single channel)
+            # - 64kbps bitrate (good quality for speech)
+            # - Fast compression preset
             compress_cmd = [
                 'ffmpeg', '-i', input_path, '-y',
-                '-acodec', 'mp3', '-ab', f'{target_bitrate}',
-                '-ar', '16000', '-ac', '1', output_path
+                '-acodec', 'libmp3lame',
+                '-ar', '16000',      # 16kHz sample rate
+                '-ac', '1',          # Mono
+                '-ab', '64k',        # 64kbps bitrate
+                '-preset', 'ultrafast',  # Fastest compression
+                '-v', 'quiet',       # Suppress output
+                output_path
             ]
             
-            subprocess.run(compress_cmd, capture_output=True, check=True)
+            subprocess.run(compress_cmd, capture_output=True, check=True, timeout=60)
+            
+            # Verify compression worked and file is smaller
+            original_size = os.path.getsize(input_path)
+            compressed_size = os.path.getsize(output_path)
+            compression_ratio = compressed_size / original_size
+            
+            print(f"   📉 Compressed: {original_size/1024/1024:.1f}MB → {compressed_size/1024/1024:.1f}MB ({compression_ratio*100:.1f}%)")
+            
             os.unlink(input_path)
             return output_path
             
