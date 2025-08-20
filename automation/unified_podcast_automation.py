@@ -467,9 +467,9 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         except:
                             newest_db_date = None
                     
-                    # Only check recent episodes (last 7 days) for daily automation
+                    # Only check recent episodes (last 24 hours) for daily automation
                     from datetime import timedelta
-                    cutoff_date = datetime.now() - timedelta(days=7)
+                    cutoff_date = datetime.now() - timedelta(hours=24)
                     
                     for entry in feed.entries:  
                         episodes_checked += 1
@@ -493,7 +493,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                             episode_date = datetime(*entry.published_parsed[:6])
                             publish_date = episode_date.isoformat()
                         
-                        # Skip episodes older than 7 days for daily automation
+                        # Skip episodes older than 24 hours for daily automation
                         if episode_date and episode_date < cutoff_date:
                             continue
                         
@@ -507,33 +507,23 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                             (episode_title and episode_title in existing_episodes)
                         )
                         
-                        # If episode doesn't exist, determine if it's a gap or new episode
+                        # If episode doesn't exist, only process if it's genuinely new (published after newest episode)
                         if not episode_exists:
-                            is_gap = False
                             is_new = False
                             
-                            if episode_date:
+                            if episode_date and newest_db_date:
                                 # Convert to naive datetime for comparison
                                 episode_naive = episode_date.replace(tzinfo=None) if episode_date.tzinfo else episode_date
-                                oldest_naive = oldest_db_date.replace(tzinfo=None) if oldest_db_date and oldest_db_date.tzinfo else oldest_db_date
                                 newest_naive = newest_db_date.replace(tzinfo=None) if newest_db_date and newest_db_date.tzinfo else newest_db_date
                                 
-                                # Check if episode falls within existing date range (gap) or is newer (new episode)
-                                if oldest_naive and newest_naive:
-                                    if oldest_naive <= episode_naive <= newest_naive:
-                                        is_gap = True
-                                    elif episode_naive > newest_naive:
-                                        is_new = True
-                                elif not oldest_naive and not newest_naive:
-                                    # No episodes in database yet - treat as new
+                                # Only process if episode is newer than our newest episode
+                                if episode_naive > newest_naive:
                                     is_new = True
-                                elif episode_naive and newest_naive and episode_naive > newest_naive:
-                                    is_new = True
-                            else:
-                                # No date available - treat as new if database has episodes
-                                is_new = episode_count == 0
+                            elif not newest_db_date:
+                                # No episodes in database yet - treat as new
+                                is_new = True
                             
-                            if (is_gap or is_new):
+                            if is_new:
                                 episode_data = {
                                     'podcast_id': podcast_id,
                                     'podcast_name': podcast_name,
@@ -548,8 +538,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                                 new_episodes.append(episode_data)
                                 new_episodes_for_podcast += 1
                                 
-                                status = "🕳️ GAP" if is_gap else "🆕 NEW"
-                                print(f"   {status}: {episode_title[:50]}... ({publish_date[:10] if publish_date else 'no date'})")
+                                print(f"   🆕 NEW: {episode_title[:50]}... ({publish_date[:10] if publish_date else 'no date'})")
                         
                         # Also check for existing episodes that need transcription
                         elif episode_exists:
