@@ -41,12 +41,13 @@ jobs:
         run: |
           echo "$GOOGLE_TOKEN_JSON" > token.json
 
-      - name: Download database from artifact (if exists)
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          name: podcast-database
-          path: .
-          if_no_artifact_found: ignore
+      # DISABLED: Use corrected database from repository instead of old artifacts
+      # - name: Download database from artifact (if exists)
+      #   uses: dawidd6/action-download-artifact@v2
+      #   with:
+      #     name: podcast-database
+      #     path: .
+      #     if_no_artifact_found: ignore
 
       - name: Run daily podcast automation
         timeout-minutes: 200
