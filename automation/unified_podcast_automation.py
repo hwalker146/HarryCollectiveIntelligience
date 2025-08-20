@@ -404,6 +404,10 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             podcasts = cursor.fetchall()
             print(f"📡 Checking {len(podcasts)} active podcasts")
             
+            # Set cutoff date for daily automation
+            from datetime import timedelta
+            cutoff_date = datetime.now() - timedelta(hours=24)
+            
             for podcast_id, podcast_name, rss_url in podcasts:
                 print(f"\n🎧 {podcast_name}...")
                 
@@ -468,9 +472,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         except:
                             newest_db_date = None
                     
-                    # Only check recent episodes (last 24 hours) for daily automation
-                    from datetime import timedelta
-                    cutoff_date = datetime.now() - timedelta(hours=24)
+                    # Check recent episodes only (cutoff date set above)
                     
                     print(f"   📻 RSS feed has {len(feed.entries)} total episodes")
                     
