@@ -435,6 +435,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                 
                 print(f"   📊 Database: {episode_count} episodes, oldest: {oldest_date}, newest: {newest_date}")
                 print(f"   🔍 Checking for gaps and new episodes...")
+                print(f"   🎯 Cutoff date: {cutoff_date.strftime('%Y-%m-%d %H:%M:%S')} (24 hours ago)")
                 
                 # Parse RSS feed
                 try:
@@ -471,9 +472,12 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                     from datetime import timedelta
                     cutoff_date = datetime.now() - timedelta(hours=24)
                     
+                    print(f"   📻 RSS feed has {len(feed.entries)} total episodes")
+                    
                     for entry in feed.entries:  
                         episodes_checked += 1
                         if episodes_checked > 20:  # Lower limit for daily runs
+                            print(f"   ⏹️  Stopping after checking {episodes_checked} episodes (limit reached)")
                             break
                             
                         # Extract audio URL
@@ -495,6 +499,7 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         
                         # Skip episodes older than 24 hours for daily automation
                         if episode_date and episode_date < cutoff_date:
+                            print(f"   ⏭️  SKIPPED (too old): {episode_title[:50]}... ({publish_date[:19] if publish_date else 'no date'})")
                             continue
                         
                         episode_title = getattr(entry, 'title', 'Unknown Title')
@@ -506,6 +511,10 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                             (audio_url and audio_url in existing_episodes) or  
                             (episode_title and episode_title in existing_episodes)
                         )
+                        
+                        print(f"   🔍 CHECKING: {episode_title[:50]}... ({publish_date[:19] if publish_date else 'no date'})")
+                        print(f"      GUID: {episode_guid}")
+                        print(f"      EXISTS: {episode_exists}")
                         
                         # If episode doesn't exist, only process if it's genuinely new (published after newest episode)
                         if not episode_exists:
@@ -564,7 +573,22 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                                 }
                                 new_episodes.append(episode_data)
                                 new_episodes_for_podcast += 1
+                                
+                                # Enhanced retranscription logging
+                                episode_id, transcribed, transcript = existing_episode
+                                transcript_length = len(transcript.strip()) if transcript else 0
                                 print(f"   🔄 RETRANSCRIBE: {episode_title[:50]}...")
+                                print(f"      DB ID: {episode_id}, Transcribed: {transcribed}, Transcript length: {transcript_length}")
+                                
+                                # Log why it needs retranscription
+                                reasons = []
+                                if transcribed == 0:
+                                    reasons.append("transcribed=0")
+                                if not transcript:
+                                    reasons.append("transcript=NULL")
+                                if transcript and len(transcript.strip()) < 100:
+                                    reasons.append("transcript<100chars")
+                                print(f"      REASON: {', '.join(reasons)}")
                         
                 except Exception as e:
                     print(f"   ❌ RSS error: {e}")
@@ -574,6 +598,10 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             
             if new_episodes:
                 print(f"\n✅ FOUND {len(new_episodes)} NEW EPISODES TO PROCESS")
+                print(f"📝 Episodes to process:")
+                for episode in new_episodes:
+                    status = "NEW" if not episode.get('existing_episode_id') else "RETRANSCRIBE"
+                    print(f"  {status}: {episode['podcast_name']} - {episode['title'][:60]}...")
             else:
                 print(f"\n📭 No new episodes found")
                 
