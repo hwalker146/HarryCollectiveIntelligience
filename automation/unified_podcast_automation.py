@@ -16,6 +16,8 @@ import json
 import openai
 import anthropic
 import re
+import time
+import random
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, date
@@ -622,9 +624,9 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
         """Process new episodes with parallel transcription and analysis"""
         processed = []
         
-        # Process episodes in parallel with a conservative limit
-        # OpenAI allows 5 requests/minute, so 3 parallel is safe
-        max_workers = min(3, len(episodes))
+        # Process episodes in parallel with optimized worker count
+        # OpenAI has high rate limits, 8 parallel workers for maximum efficiency
+        max_workers = min(8, len(episodes))
         
         print(f"\n🚀 PARALLEL PROCESSING: {len(episodes)} episodes with {max_workers} workers")
         
@@ -668,14 +670,10 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                 print("   ⚠️ Compression failed, using original file")
                 # Continue with original file rather than failing
             
-            # Transcribe
+            # Transcribe with rate limit handling
             print("   🎤 Transcribing...")
             with open(audio_path, 'rb') as audio_file:
-                transcript = self.get_openai_client().audio.transcriptions.create(
-                    model="whisper-1",
-                    file=audio_file,
-                    response_format="text"
-                )
+                transcript = self.transcribe_with_retry(audio_file)
             
             os.unlink(audio_path)
             
@@ -691,17 +689,19 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
             return None
     
     def compress_audio(self, input_path):
-        """Compress audio file for optimal transcription speed"""
+        """Compress audio file with silence removal for optimal transcription speed"""
         try:
             output_path = input_path.replace('.mp3', '_compressed.mp3')
             
-            # Aggressive compression for speed:
+            # Enhanced compression with audio preprocessing:
+            # - Remove silence and quiet sections
             # - 16kHz sample rate (Whisper minimum)
-            # - Mono (single channel)
+            # - Mono (single channel)  
             # - 64kbps bitrate (good quality for speech)
             # - Fast compression preset
             compress_cmd = [
                 'ffmpeg', '-i', input_path, '-y',
+                '-af', 'silenceremove=start_periods=1:start_silence=0.1:start_threshold=-50dB:detection=peak,aformat=sample_rates=16000',
                 '-acodec', 'libmp3lame',
                 '-ar', '16000',      # 16kHz sample rate
                 '-ac', '1',          # Mono
@@ -726,6 +726,43 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
         except Exception as e:
             print(f"   ❌ Compression failed: {e}")
             return None
+    
+    def transcribe_with_retry(self, audio_file):
+        """Transcribe audio with rate limit error handling and exponential backoff"""
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                transcript = self.get_openai_client().audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language="en",  # English language hint for faster/better transcription
+                    response_format="text"
+                )
+                return transcript
+                
+            except openai.RateLimitError as e:
+                if attempt < max_retries - 1:
+                    # Exponential backoff with jitter: 2^attempt + random(0-1) seconds
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"   ⏳ Rate limit exceeded (attempt {attempt + 1}/{max_retries}), waiting {wait_time:.1f}s...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"   ❌ Rate limit exceeded after {max_retries} attempts")
+                    raise e
+                    
+            except openai.APIError as e:
+                if attempt < max_retries - 1:
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    print(f"   ⏳ API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time:.1f}s...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"   ❌ API error after {max_retries} attempts")
+                    raise e
+                    
+            except Exception as e:
+                print(f"   ❌ Transcription error: {e}")
+                raise e
     
     def analyze_episode(self, episode, transcript):
         """Analyze episode with appropriate prompt"""
@@ -769,7 +806,7 @@ TRANSCRIPT:
             # Update episode with transcript
             cursor.execute('''
                 UPDATE episodes 
-                SET transcript = ?, transcribed = 1, created_at = ?
+                SET transcript = ?, transcribed = 1, processed = 1, created_at = ?
                 WHERE id = ?
             ''', (transcript, datetime.now().isoformat(), episode_id))
             
@@ -798,8 +835,8 @@ TRANSCRIPT:
             cursor.execute('''
                 INSERT INTO episodes (
                     podcast_id, title, audio_url, publish_date, 
-                    description, episode_url, guid, transcript, transcribed, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                    description, episode_url, guid, transcript, transcribed, processed, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)
             ''', (
                 episode['podcast_id'],
                 episode['title'],
