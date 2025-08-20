@@ -4,7 +4,6 @@ on:
     - cron: '0 10 * * *'  # 10am UTC - Podcast processing
     - cron: '0 12 * * *'  # 12pm UTC - WSJ filtered investment analysis (8am ET)
     - cron: '0 16 * * *'  # 4pm UTC - Canary Media analysis (12pm ET)
-    - cron: '0 18 * * *'  # 6pm UTC - WSJ full analysis (2pm ET)
   workflow_dispatch:
 jobs:
   process-podcasts:
@@ -147,40 +146,4 @@ jobs:
         with:
           name: canary-media-analysis-${{ github.run_number }}
           path: content/canary_media/
-          retention-days: 7
-
-  wsj-combined-analysis:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    if: github.event.schedule == '0 18 * * *' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          cache: 'pip'
-
-      - name: Install Python dependencies
-        run: |
-          pip install feedparser requests beautifulsoup4 anthropic
-
-      - name: Run WSJ Business & Technology Analysis
-        timeout-minutes: 30
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-        run: |
-          cd utilities
-          python wsj_business_aggregator.py
-
-      - name: Upload analysis output
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: wsj-combined-analysis-${{ github.run_number }}
-          path: content/wsj_combined/
           retention-days: 7
