@@ -467,9 +467,13 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         except:
                             newest_db_date = None
                     
-                    for entry in feed.entries:  # Check ALL episodes to find gaps
+                    # Only check recent episodes (last 7 days) for daily automation
+                    from datetime import timedelta
+                    cutoff_date = datetime.now() - timedelta(days=7)
+                    
+                    for entry in feed.entries:  
                         episodes_checked += 1
-                        if episodes_checked > 50:  # Reasonable limit to prevent excessive processing
+                        if episodes_checked > 20:  # Lower limit for daily runs
                             break
                             
                         # Extract audio URL
@@ -488,6 +492,10 @@ Brief overview of the most significant AI and technology insights (2-3 sentences
                         if hasattr(entry, 'published_parsed') and entry.published_parsed:
                             episode_date = datetime(*entry.published_parsed[:6])
                             publish_date = episode_date.isoformat()
+                        
+                        # Skip episodes older than 7 days for daily automation
+                        if episode_date and episode_date < cutoff_date:
+                            continue
                         
                         episode_title = getattr(entry, 'title', 'Unknown Title')
                         episode_guid = getattr(entry, 'id', None) or audio_url
