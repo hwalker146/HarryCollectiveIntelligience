@@ -1,12 +1,14 @@
 name: Daily Podcast Processing
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 10 * * *'  # 10am UTC - Podcast processing
+    - cron: '0 12 * * *'  # 12pm UTC - Canary Media analysis
   workflow_dispatch:
 jobs:
   process-podcasts:
     runs-on: ubuntu-latest
     timeout-minutes: 240
+    if: github.event.schedule == '0 10 * * *' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout repository
@@ -71,4 +73,40 @@ jobs:
           path: |
             *.log
             logs/
+          retention-days: 7
+
+  canary-media-analysis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event.schedule == '0 12 * * *' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          pip install feedparser requests beautifulsoup4 anthropic
+
+      - name: Run Canary Media Analysis
+        timeout-minutes: 20
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: |
+          cd utilities
+          python canary_media_aggregator.py
+
+      - name: Upload analysis output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canary-media-analysis-${{ github.run_number }}
+          path: content/canary_media/
           retention-days: 7
