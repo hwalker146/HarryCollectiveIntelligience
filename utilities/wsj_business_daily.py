@@ -5,10 +5,10 @@ Command-line version for processing articles by date
 Usage: python wsj_business_daily.py [today|yesterday|all|NUMBER]
 """
 import sys
-from wsj_business_aggregator import WSJBusinessAggregator
+from wsj_business_aggregator import WSJAggregator
 
 def main():
-    aggregator = WSJBusinessAggregator()
+    aggregator = WSJAggregator()
     
     # Parse command line argument
     if len(sys.argv) > 1:

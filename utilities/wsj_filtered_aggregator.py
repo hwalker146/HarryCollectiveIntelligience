@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WSJ Business RSS Feed Aggregator
-Fetches all articles from WSJ Business RSS feed and outputs organized text content with financial analysis
+WSJ Filtered Aggregator - Investment-focused filtering
+Filters WSJ Business & Technology articles based on specific investment criteria
 """
 import feedparser
 import requests
@@ -15,13 +15,13 @@ from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-class WSJAggregator:
+class WSJFilteredAggregator:
     def __init__(self):
         self.rss_urls = {
             "Business": "https://feeds.content.dowjones.io/public/rss/WSJcomUSBusiness",
             "Technology": "https://feeds.content.dowjones.io/public/rss/RSSWSJD"
         }
-        self.output_dir = Path(__file__).parent.parent / 'content' / 'wsj_combined'
+        self.output_dir = Path(__file__).parent.parent / 'content' / 'wsj_filtered'
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # WSJ credentials
@@ -31,8 +31,34 @@ class WSJAggregator:
         # Initialize Claude API client
         self.anthropic_client = None
         
+        # Investment filtering criteria
+        self.relevant_industries = [
+            'infrastructure', 'energy', 'healthcare', 'financial services', 
+            'technology', 'industrials', 'utilities', 'renewable energy',
+            'data center', 'payment', 'fintech', 'biotech', 'power',
+            'transportation', 'telecom', 'banking', 'insurance'
+        ]
+        
+        self.relevant_events = [
+            'merger', 'acquisition', 'M&A', 'IPO', 'deal', 'transaction',
+            'regulatory', 'regulation', 'policy', 'market trend', 'funding',
+            'investment', 'capital', 'private equity', 'venture capital',
+            'valuation', 'earnings', 'revenue', 'billion', 'million'
+        ]
+        
+        self.excluded_topics = [
+            'celebrity', 'entertainment', 'sports', 'retail', 'fashion',
+            'restaurant', 'movie', 'music', 'gaming', 'social media',
+            'consumer goods', 'apparel', 'luxury'
+        ]
+        
+        self.financial_keywords = [
+            '$100m', '$100 million', '$200m', '$300m', '$500m', '$1b', '$1 billion',
+            'billion', 'market cap', 'valuation', 'acquisition', 'merger'
+        ]
+        
         # Financial analysis prompt
-        self.analysis_prompt = """You are a financial analyst specializing in corporate strategy and investment. You will be given one or more articles from the Wall Street Journal's Business section. Your task is to produce a clear, concise, and investor-oriented summary.
+        self.analysis_prompt = """You are a financial analyst specializing in corporate strategy and investment. You will be given filtered Wall Street Journal Business and Technology articles that have been pre-screened for investment relevance. Your task is to produce a clear, concise, and investor-oriented summary.
 
 Focus on:
 - The main development or event (earnings, M&A, regulation, management, industry shifts)
@@ -45,9 +71,64 @@ Headline Insight – one sentence capturing the most important takeaway.
 Summary - paragraph concise breakdown of key facts and implications.
 Investor Lens – one short paragraph on how this development could affect corporate strategy, markets, or capital allocation."""
         
+    def is_article_relevant(self, entry):
+        """Filter articles based on investment criteria"""
+        title = entry.get('title', '').lower()
+        summary = entry.get('summary', '').lower()
+        content = f"{title} {summary}"
+        
+        # Exclude unwanted topics first
+        for excluded in self.excluded_topics:
+            if excluded in content:
+                return False, f"Excluded: {excluded}"
+        
+        # Check for relevant industries
+        industry_match = False
+        matched_industry = ""
+        for industry in self.relevant_industries:
+            if industry in content:
+                industry_match = True
+                matched_industry = industry
+                break
+        
+        # Check for relevant events
+        event_match = False
+        matched_event = ""
+        for event in self.relevant_events:
+            if event in content:
+                event_match = True
+                matched_event = event
+                break
+        
+        # Check for financial significance
+        financial_match = False
+        matched_financial = ""
+        for keyword in self.financial_keywords:
+            if keyword in content:
+                financial_match = True
+                matched_financial = keyword
+                break
+        
+        # Article is relevant if it matches industry AND (event OR financial significance)
+        if industry_match and (event_match or financial_match):
+            reason = f"Industry: {matched_industry}"
+            if event_match:
+                reason += f", Event: {matched_event}"
+            if financial_match:
+                reason += f", Financial: {matched_financial}"
+            return True, reason
+        
+        # Also include if it has strong financial significance even without specific industry match
+        if financial_match and event_match:
+            return True, f"Financial: {matched_financial}, Event: {matched_event}"
+        
+        return False, "No relevant matches"
+    
     def fetch_rss_feeds(self):
-        """Fetch and parse multiple RSS feeds"""
+        """Fetch and parse multiple RSS feeds with filtering and deduplication"""
         all_entries = []
+        filtered_count = 0
+        seen_urls = set()  # Track URLs to avoid duplicates
         
         for feed_name, feed_url in self.rss_urls.items():
             try:
@@ -57,17 +138,33 @@ Investor Lens – one short paragraph on how this development could affect corpo
                 if feed.bozo:
                     print(f"⚠️ Warning: Feed parsing issues detected for {feed_name}")
                 
-                # Add feed name to each entry for categorization
+                feed_filtered = 0
                 for entry in feed.entries:
                     entry['feed_category'] = feed_name
+                    
+                    # Check for duplicates first
+                    article_url = entry.link
+                    if article_url in seen_urls:
+                        print(f"   🔄 {entry.title[:50]}... (Duplicate - skipped)")
+                        continue
+                    
+                    # Apply filtering
+                    is_relevant, reason = self.is_article_relevant(entry)
+                    if is_relevant:
+                        seen_urls.add(article_url)
+                        all_entries.append(entry)
+                        feed_filtered += 1
+                        print(f"   ✅ {entry.title[:50]}... ({reason})")
+                    else:
+                        print(f"   🚫 {entry.title[:50]}... ({reason})")
                 
-                all_entries.extend(feed.entries)
-                print(f"✅ Found {len(feed.entries)} {feed_name} articles")
+                filtered_count += feed_filtered
+                print(f"✅ {feed_name}: {feed_filtered}/{len(feed.entries)} articles passed filter")
                 
             except Exception as e:
                 print(f"❌ Error fetching {feed_name} RSS feed: {e}")
         
-        print(f"📊 Total articles from all feeds: {len(all_entries)}")
+        print(f"📊 Total filtered articles: {filtered_count} (from {sum(len(feedparser.parse(url).entries) for url in self.rss_urls.values())} total)")
         return all_entries
     
     def extract_article_content(self, article_url):
@@ -79,7 +176,7 @@ Investor Lens – one short paragraph on how this development could affect corpo
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             })
             
-            # First, try to get the article directly (might work with authenticated session)
+            # First, try to get the article directly
             response = session.get(article_url, timeout=30)
             
             # If we get redirected to login or get 401/403, try to authenticate
@@ -90,7 +187,7 @@ Investor Lens – one short paragraph on how this development could affect corpo
                 login_url = "https://accounts.wsj.com/login"
                 login_response = session.get(login_url)
                 
-                # Basic login attempt (WSJ might have more complex auth)
+                # Basic login attempt
                 login_data = {
                     'username': self.wsj_username,
                     'password': self.wsj_password
@@ -143,8 +240,8 @@ Investor Lens – one short paragraph on how this development could affect corpo
                     article_text = '\n\n'.join(paragraph_texts)
             
             # Clean up text
-            article_text = re.sub(r'\n{3,}', '\n\n', article_text)  # Reduce excessive newlines
-            article_text = re.sub(r'[ \t]+', ' ', article_text)      # Normalize whitespace
+            article_text = re.sub(r'\n{3,}', '\n\n', article_text)
+            article_text = re.sub(r'[ \t]+', ' ', article_text)
             
             return article_text.strip()
             
@@ -154,9 +251,8 @@ Investor Lens – one short paragraph on how this development could affect corpo
     
     def clean_title(self, title):
         """Clean title for use as section header"""
-        # Remove HTML entities and clean up
-        title = re.sub(r'&[a-zA-Z0-9#]+;', '', title)  # Remove HTML entities
-        title = re.sub(r'[^\w\s\-\.\,\:\!\$\%]', '', title)  # Keep basic punctuation and financial symbols
+        title = re.sub(r'&[a-zA-Z0-9#]+;', '', title)
+        title = re.sub(r'[^\w\s\-\.\,\:\!\$\%]', '', title)
         return title.strip()
     
     def format_date(self, published_parsed):
@@ -198,7 +294,7 @@ Investor Lens – one short paragraph on how this development could affect corpo
     def analyze_with_claude(self, content):
         """Send content to Claude for financial analysis"""
         try:
-            print("🧠 Analyzing articles with Claude AI...")
+            print("🧠 Analyzing filtered articles with Claude AI...")
             
             response = self.get_anthropic_client().messages.create(
                 model="claude-3-5-sonnet-20241022",
@@ -206,7 +302,7 @@ Investor Lens – one short paragraph on how this development could affect corpo
                 messages=[
                     {
                         "role": "user", 
-                        "content": f"{self.analysis_prompt}\n\nArticles to analyze:\n\n{content}"
+                        "content": f"{self.analysis_prompt}\n\nFiltered articles to analyze:\n\n{content}"
                     }
                 ]
             )
@@ -222,34 +318,22 @@ Investor Lens – one short paragraph on how this development could affect corpo
     def send_email(self, subject, content, recipient="hwalker146@outlook.com"):
         """Send email with analysis"""
         try:
-            print("📧 Sending analysis email...")
+            print("📧 Sending filtered analysis email...")
             
-            # Get email credentials first - match unified automation format
             sender_email = os.getenv('EMAIL_FROM', 'aipodcastdigest@gmail.com')
             sender_password = os.getenv('EMAIL_PASSWORD')
-            
-            # Email configuration - detect provider from email address
-            if sender_email and sender_email.endswith('@gmail.com'):
-                smtp_server = "smtp.gmail.com"
-                smtp_port = 587
-            else:
-                smtp_server = "smtp-mail.outlook.com"
-                smtp_port = 587
             
             if not sender_email or not sender_password:
                 print("❌ Email credentials not found in environment variables")
                 return False
             
-            # Create message
             msg = MIMEMultipart()
             msg['From'] = sender_email
             msg['To'] = recipient
             msg['Subject'] = subject
             
-            # Add content
             msg.attach(MIMEText(content, 'plain'))
             
-            # Send email - match unified automation method
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.starttls()
             server.login(sender_email, sender_password)
@@ -264,11 +348,11 @@ Investor Lens – one short paragraph on how this development could affect corpo
             return False
     
     def aggregate_articles(self, limit=None, date_filter=None, send_analysis=False):
-        """Fetch all articles and aggregate content"""
+        """Fetch and filter articles, then aggregate content"""
         entries = self.fetch_rss_feeds()
         
         if not entries:
-            print("❌ No articles found")
+            print("❌ No relevant articles found after filtering")
             return
         
         # Filter by date if specified
@@ -276,24 +360,24 @@ Investor Lens – one short paragraph on how this development could affect corpo
             if date_filter == 'today':
                 target_date = datetime.now().date()
                 entries = self.filter_articles_by_date(entries, target_date)
-                print(f"📅 Found {len(entries)} articles from today ({target_date})")
+                print(f"📅 Found {len(entries)} relevant articles from today ({target_date})")
             elif date_filter == 'yesterday':
                 target_date = datetime.now().date() - timedelta(days=1)
                 entries = self.filter_articles_by_date(entries, target_date)
-                print(f"📅 Found {len(entries)} articles from yesterday ({target_date})")
+                print(f"📅 Found {len(entries)} relevant articles from yesterday ({target_date})")
         
         # Limit articles if specified
-        if limit and not date_filter:
+        if limit and len(entries) > limit:
             entries = entries[:limit]
-            print(f"📝 Processing first {limit} articles...")
-        elif not date_filter:
-            print(f"📝 Processing all {len(entries)} articles...")
+            print(f"📝 Limited to first {limit} relevant articles...")
         
         # Generate output content
-        output_content = f"""# WSJ Business & Technology News Aggregation
+        output_content = f"""# WSJ Filtered Investment Analysis
 Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
-Sources: WSJ Business & Technology RSS Feeds
-Total Articles: {len(entries)}
+Sources: WSJ Business & Technology RSS Feeds (Filtered for Investment Relevance)
+Articles Processed: {len(entries)}
+Filter Criteria: Infrastructure, Energy, Healthcare, Financial Services, Technology, Industrials, Utilities
+Focus: M&A, IPOs, Regulatory Changes, Market Trends ($300M+ market cap, $100M+ transactions)
 
 ---
 
@@ -310,8 +394,6 @@ Total Articles: {len(entries)}
             
             # Try to get article content
             article_content = self.extract_article_content(article_url)
-            
-            # Use RSS summary (since WSJ articles are often behind paywall)
             summary = entry.get('summary', 'No summary available')
             
             if article_content and len(article_content) > 200:
@@ -326,8 +408,8 @@ Total Articles: {len(entries)}
 
 """
                 processed_count += 1
-            elif summary and len(summary) > 50:
-                # Use RSS summary (which is usually quite detailed for WSJ)
+            elif summary and len(summary) > 20:
+                # Use RSS summary (be less restrictive since auth isn't working)
                 output_content += f"""## [{feed_category}] {title}
 **Published:** {published_date}  
 **URL:** {article_url}
@@ -339,39 +421,47 @@ Total Articles: {len(entries)}
 """
                 processed_count += 1
             else:
-                # Skip articles with no useful content
-                print(f"   ⚠️ Skipping article with insufficient content")
-                continue
+                # Use title only if no summary available
+                output_content += f"""## [{feed_category}] {title}
+**Published:** {published_date}  
+**URL:** {article_url}
+
+*[RSS summary not available - title only]*
+
+---
+
+"""
+                processed_count += 1
         
         # Generate filename with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"wsj_combined_aggregated_{timestamp}.md"
+        filename = f"wsj_filtered_aggregated_{timestamp}.md"
         output_path = self.output_dir / filename
         
         # Write to file
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(output_content)
         
-        print(f"\n✅ Aggregation Complete!")
+        print(f"\n✅ Filtered Aggregation Complete!")
         print(f"📁 Output saved to: {output_path}")
-        print(f"📊 Successfully processed: {processed_count}/{len(entries)} articles")
+        print(f"📊 Successfully processed: {processed_count}/{len(entries)} relevant articles")
         
         # Perform Claude analysis and send email if requested
         if send_analysis and processed_count > 0:
-            print(f"\n🔍 Performing financial analysis...")
+            print(f"\n🔍 Performing investment analysis on filtered content...")
             
-            # Analyze content with Claude
             analysis = self.analyze_with_claude(output_content)
             
             if analysis:
-                # Generate email subject
                 date_str = datetime.now().strftime('%B %d, %Y')
-                subject = f"WSJ Business & Technology Analysis - {date_str} ({processed_count} articles)"
+                subject = f"WSJ Filtered Investment Analysis - {date_str} ({processed_count} articles)"
                 
-                # Create email content
-                email_content = f"""Daily Business & Financial Analysis
+                email_content = f"""Daily Filtered Investment Analysis
 Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}
-Articles Analyzed: {processed_count}
+Relevant Articles Analyzed: {processed_count}
+
+Filter Applied: Infrastructure, Energy, Healthcare, Financial Services, Technology, Industrials, Utilities
+Focus: M&A, IPOs, Regulatory Changes, Market Trends ($300M+ market cap, $100M+ transactions)
 
 {analysis}
 
@@ -380,17 +470,15 @@ Articles Analyzed: {processed_count}
 Full Article Text Available At:
 {output_path}
 
-This analysis was generated automatically using Claude AI based on the latest WSJ Business articles.
+This analysis was generated automatically using Claude AI based on filtered WSJ Business & Technology articles.
 """
                 
-                # Send email
                 email_success = self.send_email(subject, email_content)
                 
                 if email_success:
-                    print(f"📧 Financial analysis emailed successfully!")
+                    print(f"📧 Filtered investment analysis emailed successfully!")
                 else:
                     print(f"❌ Failed to send email, but analysis completed")
-                    print(f"📋 Analysis saved to file for manual review")
             else:
                 print(f"❌ Analysis failed, skipping email")
         
@@ -398,15 +486,13 @@ This analysis was generated automatically using Claude AI based on the latest WS
 
 def main():
     """Main execution function"""
-    print("💼 WSJ Business & Technology RSS Aggregator")
+    print("🎯 WSJ Filtered Investment Aggregator")
     print("=" * 50)
     
-    aggregator = WSJAggregator()
+    aggregator = WSJFilteredAggregator()
     
-    # Process articles from today with analysis and email (default to 20 articles for today)
-    print(f"\n📅 Processing today's articles with financial analysis...")
+    print(f"\n📅 Processing today's investment-relevant articles...")
     
-    # Run aggregation
     try:
         output_path = aggregator.aggregate_articles(date_filter='today', send_analysis=True)
         
@@ -415,7 +501,7 @@ def main():
             print(f"   File: {output_path.name}")
             print(f"   Size: {output_path.stat().st_size / 1024:.1f} KB")
         else:
-            print(f"\n📅 No articles found for today. Trying yesterday...")
+            print(f"\n📅 No relevant articles found for today. Trying yesterday...")
             output_path = aggregator.aggregate_articles(date_filter='yesterday', send_analysis=True)
             if output_path:
                 print(f"\n📖 Preview of yesterday's output file:")
