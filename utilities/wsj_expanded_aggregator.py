@@ -252,15 +252,9 @@ Article Content:
                 report_content += f"{article['analysis']}\n\n"
                 report_content += "---\n\n"
         
-        # Save report
-        report_filename = f"wsj_expanded_{timestamp}.md"
-        report_path = self.output_dir / report_filename
-        
-        with open(report_path, 'w', encoding='utf-8') as f:
-            f.write(report_content)
-        
-        print(f"📄 Report saved: {report_path}")
-        return report_content, report_path
+        # Don't save report to file - just return for email
+        print(f"📄 Report generated (email only - not saved to file)")
+        return report_content, None
     
     def send_email_report(self, report_content, num_articles):
         """Send email report"""
@@ -312,7 +306,7 @@ Article Content:
         
         print(f"\n🎉 WSJ Expanded aggregation completed!")
         print(f"📊 Total articles: {len(articles)}")
-        print(f"📄 Report saved: {report_path}")
+        print(f"📧 Report emailed (not saved locally)")
 
 if __name__ == "__main__":
     aggregator = WSJExpandedAggregator()
