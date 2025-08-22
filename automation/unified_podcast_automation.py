@@ -216,67 +216,40 @@ Extract 5-7 most significant quotes focusing on:
 
         self.a16z_prompt = """A16Z Podcast Transcription Analysis Prompt
 
-Context: You are analyzing this transcription with a focus on AI developments, technology trends, and business insights. Extract key learnings that would be valuable for understanding the current state and future direction of AI and technology markets.
+Context: You are analyzing this transcription to extract key insights about technology, business strategy, economics, and industry trends. Focus on understanding the current state and future direction of the markets, sectors, or topics being discussed.
 
-## Primary Analysis Framework
+## Analysis Framework
 
-### AI & Technology Insights
-* AI Development Trends: Highlight discussions about model architectures, capabilities, limitations, and breakthrough developments
-* Application Areas: Note specific use cases, industry applications, and real-world implementations discussed
-* Technical Challenges: Identify mentioned bottlenecks, unsolved problems, or areas needing innovation
-* Market Opportunities: Extract specific market sizing data, growth projections, and emerging segments
+### Executive Summary
+Provide a brief overview of the most significant insights and themes discussed in the conversation. Capture the core arguments, disagreements, and consensus points in 2-3 sentences.
 
-### Competitive Landscape Analysis
-* Key Players: Map out mentioned companies, their positioning, and competitive advantages
-* Market Consolidation: Identify trends toward consolidation or fragmentation
-* Barriers to Entry: Note capital requirements, technical moats, or regulatory barriers
-* Competitive Threats: Highlight potential disruptors or new market entrants
+### Key Developments and Insights
+Analyze the main developments, trends, or insights discussed in the conversation. Focus on extracting actionable intelligence about market conditions, strategic opportunities, technological shifts, or policy changes. Describe each development with its implications and potential timeline for impact. Consider both consensus views and contrarian perspectives presented by the speakers.
 
-### Technology Evolution & Adoption
-* Development Timelines: Note predictions about technology maturity and adoption curves
-* Adoption Barriers: Extract challenges preventing widespread adoption
-* Success Factors: Identify what's driving successful implementations
-* Future Predictions: Capture forecasts about technology direction and market evolution
+### Market and Industry Dynamics
+Examine the broader market forces, competitive landscape, and industry dynamics discussed. Analyze growth drivers and headwinds, regulatory environment changes, and disruption factors. Map out key players mentioned, their positioning, and competitive advantages. Identify trends toward market consolidation or fragmentation, barriers to entry, and potential competitive threats or new market entrants.
 
-### Business & Strategic Insights
-* Business Model Innovation: Note new monetization strategies or market approaches
-* Partnership Trends: Identify collaboration patterns or strategic relationships
-* Investment Themes: Extract insights about funding trends and capital allocation
-* Regulatory Considerations: Highlight policy discussions and regulatory impacts
+### Strategic and Business Insights
+Explore business model innovations, monetization strategies, and new market approaches discussed. Identify partnership trends, collaboration patterns, and strategic relationships mentioned. Extract insights about funding trends, capital allocation strategies, and investment themes. Note any regulatory considerations, policy discussions, and their potential business impacts.
 
-## Output Structure
-
-### Executive Summary 
-Brief overview of the most significant AI and technology insights (2-3 sentences)
-
-### Key AI Developments
-* Development 1: [Description, implications, timeline]
-* Development 2: [Description, implications, timeline]
-* Development 3: [Description, implications, timeline]
-
-### Market Dynamics
-* Growth drivers and headwinds
-* Regulatory environment changes
-* Technology disruption factors
-
-### Actionable Intelligence
-* Companies or technologies to research further
-* Trends worth monitoring
-* Potential opportunities or threats
+### Future Outlook and Predictions
+Capture forecasts about market direction, technology evolution, and industry trends. Note development timelines, adoption curves, and maturity predictions. Identify adoption barriers, success factors driving implementations, and future market opportunities. Assess the credibility of predictions based on speaker expertise and track record.
 
 ### Risk Assessment
-* Primary risks to discussed developments
-* Mitigation strategies mentioned
+Analyze primary risks to the developments and trends discussed. Identify potential headwinds, challenges, or threats mentioned by speakers. Note any mitigation strategies, contingency plans, or risk management approaches discussed. Consider both short-term tactical risks and long-term strategic challenges.
+
+### Actionable Intelligence
+Synthesize insights into actionable intelligence for investors, entrepreneurs, and business leaders. Identify companies, technologies, or sectors worth researching further. Highlight trends worth monitoring and potential opportunities or threats to watch. Connect insights to broader macroeconomic, geopolitical, or societal themes when relevant.
 
 ### Notable Quotes
-* 3-5 most insightful quotes relevant to AI and technology trends
+* [Most insightful quote #1]
+* [Most insightful quote #2]
+* [Most insightful quote #3]
+* [Most insightful quote #4]
+* [Most insightful quote #5]
 
-## Additional Instructions
-* Quantify wherever possible (market sizes, growth rates, timelines)
-* Flag any contrarian or non-consensus views expressed
-* Note the credibility and track record of speakers when assessing insights
-* Highlight any mentions of ESG considerations or sustainability trends
-* Connect insights to broader macroeconomic or geopolitical themes when relevant"""
+## Additional Guidelines
+Quantify insights wherever possible with specific market sizes, growth rates, timelines, and financial metrics. Flag any contrarian or non-consensus views expressed and note the reasoning behind them. Consider the credibility and track record of speakers when assessing the weight of their insights. Highlight any mentions of ESG considerations, sustainability trends, or social impact themes. Maintain objectivity while capturing the nuance of different perspectives presented in the discussion."""
     
     def get_prompt_for_podcast(self, podcast_name):
         """Select appropriate prompt based on podcast"""
