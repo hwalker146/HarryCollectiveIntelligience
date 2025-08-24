@@ -259,12 +259,21 @@ Article Content:
     def send_email_report(self, report_content, num_articles):
         """Send email report"""
         try:
-            email_user = os.getenv('EMAIL_USER', 'hwalker146@outlook.com')
+            # Use Gmail for sending - matches podcast automation
+            email_user = 'aipodcastdigest@gmail.com'
             email_password = os.getenv('EMAIL_PASSWORD')
             
             if not email_password:
                 print("📧 Email password not configured, skipping email")
                 return
+            
+            # Auto-detect email provider
+            if email_user.endswith('@gmail.com'):
+                smtp_server = "smtp.gmail.com"
+                smtp_port = 587
+            else:
+                smtp_server = "smtp-mail.outlook.com"
+                smtp_port = 587
             
             msg = MIMEMultipart()
             msg['From'] = email_user
@@ -273,7 +282,9 @@ Article Content:
             
             msg.attach(MIMEText(report_content, 'plain'))
             
-            with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+            print(f"📧 Sending email from {email_user} via {smtp_server}...")
+            
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
                 server.starttls()
                 server.login(email_user, email_password)
                 server.send_message(msg)
