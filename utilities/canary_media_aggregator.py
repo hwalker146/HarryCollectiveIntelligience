@@ -186,8 +186,8 @@ Investor Lens – one short paragraph explaining how this development could infl
         try:
             print("📧 Sending analysis email...")
             
-            # Get email credentials first - match unified automation format
-            sender_email = os.getenv('EMAIL_FROM', 'aipodcastdigest@gmail.com')
+            # Use Gmail for sending - matches other aggregators
+            sender_email = 'aipodcastdigest@gmail.com'
             sender_password = os.getenv('EMAIL_PASSWORD')
             
             # Email configuration - detect provider from email address
