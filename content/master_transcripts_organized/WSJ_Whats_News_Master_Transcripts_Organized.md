@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 147
+**Total Episodes:** 148
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2025-11-08
+
+### What’s News in Markets: Airport Chaos, E.l.f. Disappoints, Palantir Falls
+**Publication Date:** 2025-11-08T00:00:00
+**Episode ID:** 5758
+
+**Full Transcript:**
+This podcast is brought to you by Twilio, the ultimate toolbox for customer engagement. Hey, listeners, it's Saturday, November 8th. I'm Francesca Fontana for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. This week had everything. We got more big AI deals and more AI jitters from traders over the technology's rapid rise. We got another twist in the Trump tariff saga as the Supreme Court judges on Wednesday expressed skepticism toward Trump's authority to impose these sweeping measures on countries around the world, which gave General Motors and other trade-sensitive stocks a rebound on hopes that the tariffs may be struck down. And Elon Musk danced with some robots because his new $1 trillion pay package got approved. Now, let's see how the stock market fared in this first week of November. All three major indexes ended up notching weekly losses, with the Dow falling 1.2%, the S&P 500 falling 1.6%, and the Nasdaq falling 3%. Now, first off, let's talk about the latest air travel drama that could put a damper on any upcoming vacation plans. Airline stocks took a tumble on Thursday after the Federal Aviation Administration ordered a 10% cut in traffic at 40 major airports to relieve unpaid air traffic controllers. The FAA updated its plan to start with traffic cuts of 4% at select airports on Friday. The reductions will increase to 6% of capacity by November 11th, 8% by November 13th, and 10% by November 14th. Plus, Transportation Secretary Sean Duffy said on Friday that if the shutdown continues, flight cancellations across the U.S. could rise to 15 or even 20%. And you can go to WSJ.com and find a great explanatory article by some of my colleagues with a map of those airports, and you can get updated information about cancellations. In reaction to Thursday's order, airline shares fell, including American Airlines, which lost 2% on the day. But on the week, American gained 4%. Next up, Elf Beauty's guidance for the year disappointed Wall Street. Let's start with the good news. So, late Wednesday, the beauty company said it logged a 14% increase in quarterly sales, as it gained market share across both high- and low-income consumers in the period. The company also got a boost from its purchase of RODE, which is Haley Beaver's cosmetics and skincare line. Meanwhile, like I said, Elf's annual forecast for adjusted earnings per share and sales came in under analysts' expectations. Elf's CEO addressed this by saying that expectations were dialed up a bit too high in the absence of the company providing guidance in recent quarters. Elf shares tanked 35% on Thursday. And on the week, the stock lost just about 40%. Last but not least, let's talk about a stock that's gotten a big boost in the AI arms race and that might be a target of investor jitters. That's Palantir Technologies, the data analytics company that's become one of the hottest names on Wall Street. On Monday, Palantir beat earnings expectations and notched another quarter of record sales as new customers flocked to buy AI technology. But investors appeared unimpressed, and its shares fell 8% on Tuesday. Now, as suggested by some analysts' reports, it may be less of a performance issue and more of a valuation issue. Palantir is one of the most richly valued stocks on the market, having more than doubled so far in 2025, and many analysts are balking at its valuation. On a weekly basis, the stock ended up down 11%. And now you know what's news in markets this week. You can read about more stocks that moved on the week's news in The Score, my column in the Wall Street Journal's Exchange section. Today's show was produced by Zoe Kolkin with supervising producer Janna Herron. I'm Francesca Fontana. Have a great weekend, and I'll see you next Saturday.
+
 
 ---
 
