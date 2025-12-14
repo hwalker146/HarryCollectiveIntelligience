@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 206
+**Total Episodes:** 207
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2025-12-13
+
+### What’s News in Markets: Soup Stock, AI Angst, Lululemon Rebound
+**Publication Date:** 2025-12-13T00:00:00
+**Episode ID:** 5869
+
+**Full Transcript:**
+Introducing Fidelity Trader Plus with customizable tools and charts you can access across all your devices. Try our most powerful trading platform yet at Fidelity.com slash Trader Plus. Investing involves risk, including risk of loss. Fidelity Brokerage Services, LLC, member NYSE SIPC. Hey, listeners, it's Saturday, December 13th. I'm Francesca Fontana for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. This week was Fed Week, everybody. The Federal Reserve announced its interest rate cut on Wednesday, a quarter point cut. The central bank decision was a big headline of the week. We also saw the continuing trend of AI anxiety, concerns about the stability and longevity of the artificial intelligence boom, which weighed on technology stocks. I'll highlight a couple of those stocks in a little bit. The Nasdaq and S&P 500 both ended lower for the week, while the Dow managed to stay in the green, bolstered by the Fed's rate cut. The Dow notched a weekly gain of roughly 1 percent. The S&P lost 0.6 percent, and the Nasdaq fell 1.6 percent. It's that time of year again, guys. Christmas is around the corner. The weather's getting colder. It is what I call, and food maker Campbell's calls, the critical soup season. Critical for me on a personal level, as a known soup enthusiast. Critical for Campbell's vis-a-vis its revenue and earnings from its canned soup business, which is still getting pressured by President Trump's tariffs. On Tuesday, the company reported top and bottom line declines, citing in part tariff-related price increases. And the report drained Campbell's shares, which dropped 5.2 percent on Tuesday. But the stock paired some of its losses and ended the week down 2.9 percent. Now let's circle back to the tech stocks that were weighed down by continued concern about the AI trade. The two in focus, Oracle and Broadcom, which both posted quarterly reports. In its report, Oracle missed expectations for its revenue and operating income. And it raised its spending forecast, fueling investor concern that its AI aspirations will take longer to pay off. Oracle shares sank 11 percent on Thursday, dragging the Nasdaq down into the red for the day and putting into stark relief how the sentiment around the brave new world of AI has shifted. After all, it was just back in September that Oracle posted a one-day gain of 36 percent as the AI trade was boosting markets to records this year. Then, chip designer Broadcom followed a similar trajectory on Friday after its own earnings report, in which its rapid sales growth didn't outweigh concerns over its sales forecasts and contracts backlog. And Broadcom shares sank 11 percent on Friday. On a weekly basis, Oracle lost about 13 percent, and Broadcom lost about 7.8 percent. Last but not least, let's talk Lululemon. The athleisure stock has had a rough year, but on Friday, shares were riding high after the company announced the departure of its CEO and after The Wall Street Journal reported that its estranged founder is eyeing a proxy fight to address the brand's so-called loss of cool. Let's take a look. The company's U.S. sales have stumbled as of late, and so has its stock price. Year-to-date, Lululemon shares are down roughly 46 percent as of Friday's close, compared with the S&P 500's year-to-date gain of roughly 16 percent. But Friday's news helped the stock turn things around, at least for the day, with Lululemon shares jumping 9.6 percent and ending the week with a gain of 7.9 percent. And now you know what's news in markets this week. You can read about more stocks that moved on the week's news in The Score, my column in The Wall Street Journal's Exchange section. Today's show was produced by Jessica Fenton with supervising producer Jana Herron. I'm Francesca Fontana. Have a great weekend, and I'll see you next Saturday. Thanks for watching. I'm Francesca Fontana. Have a great weekend. I'll see you next Saturday. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. Bye. 
+
 
 ---
 
