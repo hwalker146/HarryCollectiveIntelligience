@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 242
+**Total Episodes:** 243
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2026-01-10
+
+### What’s News in Markets: Defense Stocks Rise, Beer Beats, Pharma Deal
+**Publication Date:** 2026-01-10T00:00:00
+**Episode ID:** 5943
+
+**Full Transcript:**
+Harvard Business School Executive Education delivers a world-class learning experience that energizes aspiring and established changemakers. Prepare for the next elevation for your organization and for yourself. Learn more at hbs.me slash breakthrough. That's hbs.me slash breakthrough. Hey, listeners. It's Saturday, January 10th. I'm Francesca Fontana for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. The first full trading week of the new year is in the bag. And it certainly wasn't a boring one. Traders had plenty to digest in the way of geopolitical uncertainty, namely the ripple effects of U.S. action in Venezuela. During the week, President Trump promised to revive the country's oil industry, and The Wall Street Journal reported on plans by the White House to dominate Venezuela's energy industry for years. And we saw how shares of American oil majors responded, like Chevron, whose shares ended up jumping 5.1% Monday and gaining 4% for the week. And before we get to some other individual movers, let's see how the major indexes did. All three notched gains for the week, with the Dow rising 2.3%, the S&P 500 gaining 1.6%, and the Nasdaq increasing about 1.9%. Let's stay in Washington for a moment here, as another sector was making moves on news coming from the Trump administration. Defense stocks. President Trump's call for a bigger defense budget sparked a rally in Lockheed Martin and other U.S. weapons makers. Trump called for a $1.5 trillion defense budget, more than $500 billion more than the Pentagon is expected to receive this fiscal year. And he wrote about it in a social media post late Wednesday. And earlier in the week, Lockheed Martin said it would more than triple Patriot missile production after reaching a seven-year deal with the Pentagon. Lockheed shares ended up gaining about 2% Tuesday and notched a weekly gain of 9.2%. Next up, let's talk Constellation Brands. You may know the company better as the importer of Corona beer. Dedicated listeners will recall that we've talked about this company's continued struggle with beer sales in recent quarters. And this latest quarter wasn't much different. Constellation reported lower sales and profit as customers, particularly Hispanic customers, continued to buy less beer. In addition to the macro trends we've been hearing about from companies, like weak consumer sentiment and a softening job market, Constellation also cited a downturn in quote, 4,000 calorie jobs, aka physically demanding jobs in areas like construction or mining, that typically boost beer sales. So the results released after the market close on Wednesday weren't great, but they were better than Wall Street was expecting. Shares closed 5.3% higher on Thursday. And on the week, they added 4.1%. Finally, we have a big pharma deal to talk about. Eli Lilly said Wednesday that it agreed to pay around $1 billion for drug maker Ventex Biosciences, a deal that could help Lilly compete in a promising new treatment area. Usually when we're talking about buzzy pharma news, it's all about weight loss drugs like Ozempic and the like, but not today. Not directly, at least. Ventex has been focused on developing drugs targeting inflammatory response. And if its experimental pills pan out, they would add to Lilly's portfolio of treatments for autoimmune conditions, as well as for obesity and other related disorders. And it could help Lilly compete against other big rivals, including Ozempic maker Novo Nordisk, that analysts say have been circling this emerging category. Ventex shares ended up soaring 37% Wednesday. And on the week, jumped a whopping 64%. And now you know what's news in markets this week. You can read about more stocks that moved on the week's news in The Score, my column in the Wall Street Journal's Exchange section. Today's show is produced by Michael LaValle, with supervising producers Jana Herron and Melanie Roy. I'm Francesca Fontana. Have a great weekend and see you next Saturday. It starts with Adobe.
+
 
 ---
 
