@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 254
+**Total Episodes:** 255
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2026-01-17
+
+### What’s News in Markets: Wegovy Pill, Salesforce AI Woes, BlackRock Record
+**Publication Date:** 2026-01-17T00:00:00
+**Episode ID:** 5966
+
+**Full Transcript:**
+TrueStage companies simplify the complex with 90 years of delivering accessible insurance and innovative financial solutions. Let's work together and build a better tomorrow today. Learn more at TrueStage.com slash WSJ. TrueStage is the marketing name for TrueStage Financial Group, and gets subsidiaries and affiliates. Corporate headquarters is located in Madison, Wisconsin. Hey, listeners. It's Saturday, January 17. I'm Jack Pitcher for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. Calm in the face of chaos. That was the theme for Markets this week. On Sunday night, news broke that Federal Reserve Chair Jerome Powell is being investigated by U.S. prosecutors over his testimony about the central bank's building renovation project. In a video statement, Powell, who is usually quite restrained, called the investigation a pretext as part of President Trump's campaign to pressure the Fed to lower interest rates and end the independence of the central bank. Investors, concerned that a lack of Fed independence could lead to runaway inflation, have been closely watching the Powell situation. Meanwhile, banks kicked off earnings season with a mixed bag of results. J.P. Morgan disappointed investors with lower-than-expected investment banking revenue, but Goldman Sachs and Morgan Stanley posted strong quarters. At the index level, stocks inched lower for the week. The S&P 500 ended down 0.4%, just shy of a record high. The Dow fell 0.3%, while the Nasdaq Composite was 0.7% lower. Novo Nordisk's shares jumped in the U.S. on Friday after a string of positive news about its flagship weight loss drug, Wagovi. The U.K.'s health regulator approved a significantly higher dose of the drug for patients with a body mass index of at least 30. The Danish drugmaker is awaiting regulatory approvals for the same-size dose in the U.S. and the EU. Meanwhile, sales of Novo's Wagovi pill just began in the U.S. Data released Friday showed the new pill generated more than 4,000 new prescriptions in the U.S. last week, a strong start, analysts said. Novo's American depository receipts jumped 9% Friday and closed up 6% for the week. AI is causing investor angst over the outlook for some major software companies. Intuit, the maker of TurboTax, Salesforce, a corporate software titan, and Adobe, which makes Photoshop and Acrobat, were all among the worst performers in the S&P 500 this week. None of the companies reported specific bad news, but analysts say rapid advancements in AI are creating a general sense of unease around software companies that were once thought to be invincible thanks to the widespread adoption of their products. AI is becoming very adept at coding software. Some investors now picture a future in which companies can use AI to handle tasks once outsourced to enterprise software, or simply build their own. For the week, Intuit shares fell 16%. Salesforce was 13% lower, while Adobe dropped 11%. The world's biggest investment firm keeps getting bigger. BlackRock reported a record $14 trillion in assets under management on Thursday, and investors were pleased with fee growth that beat expectations. BlackRock primarily makes money through fees it charges to manage trillions of dollars for clients. Its assets grew to a record in 2025 on the back of market gains and $700 billion of new client money. BlackRock shares advanced almost 6% after it reported earnings Thursday and closed the week near a record high. And now you know what's news in markets this week. You can read more about the week's market moves on WSJ.com. Today's show is produced by Jess Fenton with supervising producer Melanie Roy. I'm Jack Pitcher. Have a great weekend. This is not a recommendation or offer to buy, sell, or retain any specific investment or service.
+
 
 ---
 
