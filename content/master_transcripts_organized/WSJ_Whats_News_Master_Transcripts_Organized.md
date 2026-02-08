@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 289
+**Total Episodes:** 290
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2026-02-07
+
+### What’s News in Markets: Gartner Woes, Super Micro Surge, Coinbase Volatility
+**Publication Date:** 2026-02-07T00:00:00
+**Episode ID:** 6037
+
+**Full Transcript:**
+Model portfolios have evolved from a one-size-fits-all solution. In a recent roundtable conversation, Jeffrey Saif of BlackRock and Alessio DeLongis of Invesco break down what's driving the next model moment, discussing how a deeper level of customization is producing a better alignment with investor goals and creating a practice differentiator for financial advisors. Hey, listeners. It's Saturday, February 7th. I'm Jack Pitcher for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. February opened with fireworks, with markets posting one of their most volatile weeks of the last year. The driver? Rapid advancements in AI are making investors question some long-held assumptions. Software developers, data and research companies, and IT services providers all got clobbered this week on concerns that AI is a threat to their businesses. The selloff was most pronounced on Tuesday, when Wall Street analysts zoomed in on new features from Anthropic's AI model, Claude. Its ability to assist with legal research and review prompted investors to dump shares of companies that focus on those areas. The selloff quickly spread to software companies, with several recording their sharpest single-day stock declines since the pandemic. Investors buying the dip helped stocks gain back some ground on Friday, but the tech-focused selloff caused an unusually large divergence among the major indexes. For the week, the tech-heavy Nasdaq composite dropped 1.8%, while the Dow Jones Industrial Average, which has less software exposure, rose 2.5%, to close at a record high above the 50,000 mark. The broad-based S&P 500 inched 0.1% lower. Let's turn to one of the S&P 500's biggest losers for the week. Gartner, a giant in the IT research and advisory industry, fell victim to the AI selloff and its own quarterly results. Not only did the company report lower fourth-quarter earnings on Tuesday, its forecast for the year also fell below Wall Street's expectations. Concerns that generative AI will reduce demand for Gartner's data and research reports has weighed on its shares for a year. Tuesday's results only reinforced those worries, sending shares down 21% for the day. For the week, the stock is down 25%. And since hitting an all-time high roughly a year ago, Gartner's shares have dropped more than 70%. While Wall Street is reassessing its software exposure, it remains bullish on the so-called picks and shovels of the AI infrastructure build-out. Shares of companies making computer chips, servers, and memory have performed well so far this year, as big tech firms continue to increase investment in the data centers needed to power AI models. SuperMaker's SuperMicro computer found itself in the spotlight this week after it reported a two-fold increase in sales in the second quarter, and offered a third-quarter forecast that topped expectations. The company's CEO also told investors that AI infrastructure demand is powering its strong growth. SuperMicro shares rallied 18% on the week, putting them among the S&P 500's top performers. And finally, an ugly week for cryptocurrencies hit the shares of several crypto-related stocks. Bitcoin fell below $64,000 on Thursday, a nearly 50% drop from its peak price last October. What's behind the decline? Skittish investors dumping riskier assets, the unwinding of leveraged Bitcoin bets, and a rally in the dollar since President Trump picked Kevin Warsh for Fed share last week. Shares of Coinbase, the largest crypto exchange in the United States, fell along with Bitcoin this week, shutting around 15%. Strategy, a software company that in recent years became one of the world's biggest buyers of Bitcoin, fell 10% this week and is down around 60% over the past year. And now you know what's news in markets this week. Today's show was produced by Alexis Moore with supervising producer Jana Heron. I'm Jack Pitcher. Have a great weekend and see you next Saturday.
+
 
 ---
 
