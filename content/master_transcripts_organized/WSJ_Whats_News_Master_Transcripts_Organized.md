@@ -1,9 +1,21 @@
 # WSJ What's News - Master Transcripts
 
 **Generated:** 2025-08-19 19:16:24
-**Total Episodes:** 312
+**Total Episodes:** 313
 
 Episodes organized by publication date (newest first).
+
+---
+
+## 2026-02-21
+
+### What’s News in Markets: Walmart Slumps, Omnicom Rallies, Moderna Comeback
+**Publication Date:** 2026-02-21T00:00:00
+**Episode ID:** 6081
+
+**Full Transcript:**
+Hey, listeners, it's Saturday, February 21st. I'm Jack Pitcher for The Wall Street Journal, and this is What's News in Markets, our look at the biggest stock moves of the week and the news that drove them. Let's get to it. Stocks were relatively muted for the shorter holiday week, but there was no shortage of action under the surface thanks to a big slate of corporate earnings. Investors seem to be regaining some confidence in tech and growth stocks, both of which have sold off for much of the year over fears that rapid advancements in AI are going to render some software companies obsolete. But this week, communication services and information technology were the S&P 500's best performing sectors. Meanwhile, consumer staples companies, which are often seen as a safe haven, dropped sharply. That signals a rotation away from the fear trade and back into other parts of the market. Then, of course, yesterday, the Supreme Court struck down President Trump's sweeping global tariffs. Last April, when they were first announced, the tariffs roiled markets, but a series of deals and carve outs in the months since helped calm investors' fears. Stocks turned higher after the Supreme Court's decision, but analysts noted the ruling had been largely expected, and Trump said he'd keep the tariffs in place under a different authority. For the week, the S&P 500 rose 1.1 percent, while the Dow was 0.3 percent higher. The tech-heavy Nasdaq added 1.5 percent. Walmart lost a notable crown when it reported earnings on Thursday. After 17 years of being the largest company in the U.S. by annual revenue, the retailer has officially been passed by Amazon. Still, Walmart's quarterly results were actually pretty strong, beating analysts' estimates for sales. Investors were not impressed. In the last three years, Walmart's shares have risen around 500 percent thanks to remarkable results. And that's made the stock expensive by traditional valuation metrics, which leaves it susceptible to disappointment if forecasts are anything less than stellar. Walmart CFO John David Rainey told investors on Thursday that the company's giving conservative guidance because the economic backdrop is somewhat unstable. Walmart shares were among the S&P's worst performers this week, dropping 8 percent. Investors found more to like with Omnicom's earnings, but employees there may be feeling jittery. Omnicom is the biggest marketing services and advertising conglomerate in the U.S., and it told investors it was doubling its cost-cut target following its acquisition of competitor IPG. It expects to cut $900 million in costs this year, primarily by reducing headcount. Investors cheered the news, sending Omnicom shares up 15 percent on Thursday and 21 percent for the week, making them the S&P's best performer. The vaccine maker Moderna has been reeling in the years since sales of its COVID-19 vaccine peaked, and the vaccine skepticism of Health and Human Services Secretary Robert F. Kennedy Jr. has been hitting its shares more recently. But a major reversal from the Food and Drug Administration on Wednesday helped turn sentiment around. Last week, the FDA said it would not review Moderna's application for a new seasonal flu shot. The decision shocked investors, but the regulator has since had a change of heart, saying it'll begin review of the new shot after Moderna agreed to additional testing in the elderly. Moderna shares rallied 6 percent on Wednesday and 18 percent on the week, putting them among the best performers in the S&P. And now you know what's news in markets this week. You can read about more stocks that moved on the week's news in our live markets coverage on WSJ.com. Today's show is produced by Alexis Moore with Deputy Editor Chris Zinsley. I'm Jack Pitcher. Have a great weekend. Law moves fast and legal work still needs to stay ahead. LexisNexis Protege Legal AI workflows bring trusted authority and verified citations into every draft. Private, secure, authoritative legal AI. LexisNexis.
+
 
 ---
 
