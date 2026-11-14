@@ -1,7 +1,5 @@
 name: Daily News Analysis
 on:
-  schedule:
-    - cron: '0 12 * * *'  # 12pm UTC - WSJ and Canary Media analysis (8am ET)
   workflow_dispatch:
 
 permissions:

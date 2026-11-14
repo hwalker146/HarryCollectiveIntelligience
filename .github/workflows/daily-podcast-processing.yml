@@ -1,7 +1,5 @@
 name: Daily Podcast Processing
 on:
-  schedule:
-    - cron: '0 10 * * *'  # 10am UTC - Podcast processing
   workflow_dispatch:
 
 permissions:
